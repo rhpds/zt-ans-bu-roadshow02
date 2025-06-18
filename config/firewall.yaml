@@ -14,6 +14,14 @@ ingress:
     port: 5986
   - protocol: TCP
     port: 3389
+  - protocol: TCP
+    port: 389
+  - protocol: TCP
+    port: 445
+  - protocol: TCP
+    port: 138
+  - protocol: TCP
+    port: 139
 egress:
 - ports:
   - protocol: TCP
@@ -28,3 +36,11 @@ egress:
     port: 5986
   - protocol: TCP
     port: 3389
+  - protocol: TCP
+    port: 389
+  - protocol: TCP
+    port: 445
+  - protocol: TCP
+    port: 138
+  - protocol: TCP
+    port: 139
