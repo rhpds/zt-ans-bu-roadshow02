@@ -1,10 +1,14 @@
-= Ansible Automation Platform Lab Guide
+= Standardized Environment Deployment with Ansible
 :toc:
 :toc-placement: auto
 
-== Welcome to the Team!
+== Scenario 02: Standardized Consistency
 
-Congratulations on joining the team! This lab will introduce you to automation using Ansible Automation Platform. We'll start with read-only tasks that are safe to automate, helping you build confidence before moving to more complex automation scenarios.
+=== Introduction
+
+Ready to dive into real automation? You've been tasked with configuring a new environment for multiple teams using standardized, consistent deployments. This scenario demonstrates how Ansible Automation Platform enables different technology teams to collaborate effectively by using pre-built playbooks and templates.
+
+By leveraging workflow templates, job templates, and secure credential management, you'll deploy and configure everything consistently across your infrastructure, minimizing manual intervention and ensuring accuracy.
 
 === Lab Environment Setup
 
@@ -18,148 +22,329 @@ Congratulations on joining the team! This lab will introduce you to automation u
 | ansible123!
 |===
 
+==== Server Information
 
+Your DNS domain for this lab is: *[[ Instruqt-Var key="DOMAIN" hostname="control" ]]*
+
+[cols="1,1"]
+|===
+| Server | FQDN
+
+| Domain Controller
+| windows.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]
+
+| Dev Windows Server
+| dbserver.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]
+|===
 
 == Lab Exercises
 
-=== Exercise 1: Backing up Linux File Systems
+=== Exercise 1: Baseline Configuration and Applications
 
-Managing backups across multiple Linux servers is a common operational task. Ansible can automate various snapshot mechanisms whether your infrastructure is cloud-based, virtualized, or bare metal.
+==== Understanding the Request
 
-==== Step 1: Check Current Backup Status
+.Support Ticket #001
+image::/ticket01.png[Support Ticket 001]
 
-. Navigate to the `aap` tab and login using the credentials above (`admin/ansible123!`)
-. Click on the Menu dropdown icon (hamburger menu)
+You've received a support ticket requesting configuration updates for two Windows servers in the UAT (User Acceptance Testing) environment. The requirements include:
+
+- Deploy a standard set of applications
+- Apply specific registry changes for environment compliance
+- Disable automatic updates to ensure stability
+- Prevent unintended changes during testing phases
+
+To address this request efficiently, you'll create a workflow template that combines multiple job templates into a logical, repeatable process.
+
+==== Step 1: Create a Workflow Template
+
 . Navigate to *Automation Execution* → *Templates*
-. Launch the template *Check RHEL Backups* by clicking the 🚀 icon
+. Click *Create template*
+. Select *Create workflow job template*
 
-You should see that no backups are currently available.
+===== Workflow Configuration:
 
-.Current Backup Status
-image::/backupcheck.png[Backup Check Results]
+* *Name:* `Windows Apps and Settings`
+* *Organization:* `Default`
+* *Description:* `Required Applications and Settings`
+* *Inventory:* `Windows Servers`
 
-==== Step 2: Create XFS Backups
+. Click *Create workflow template*
 
-Now let's create backups of the XFS file systems on your RHEL servers:
+This will open the *Workflow Visualizer* where you'll design your automation workflow.
 
-. Navigate back to *Automation Execution* → *Templates*
-. Launch the *Server Backup - XFS/RHEL* template
-. This process will backup your three RHEL nodes using XFS dumps
+==== Step 2: Add the First Workflow Step
+
+. In the Workflow Visualizer, click *Add Step*
+
+.Workflow Creation Interface
+image:::/workflow_create.png[Workflow Creation]
+
+===== First Step Configuration:
+
+* *Node Type:* `Job Template`
+* *Job Template:* `Windows Registry keys`
+* *Convergence:* `Any`
+
+. Click *Next* and *Finish*
+
+==== Step 3: Add the Second Workflow Step
+
+. Select the `+...+` menu on your first step
+. Click *Add step and link*
+
+.Workflow Step Linking
+image::/sidecarworkflow.png[Workflow Step Configuration]
+
+===== Second Step Configuration:
+
+* *Node Type:* `Job Template`
+* *Job Template:* `Windows Server Applications`
+* *Status:* `Always run`
+* *Convergence:* `Any`
+
+. Click *Next* and *Finish*
+. Select *Save* to save the workflow
+
+==== Step 4: Execute the Workflow
+
+. Navigate to *Automation Execution* → *Templates*
+. Select the *Windows Apps and Settings workflow*
+. Click *Launch template*
+
+Monitor the workflow execution in the output. You'll observe how the workflow orchestrates multiple job templates:
+
+- First: Windows Registry keys configuration (completes with green checkmark)
+- Then: Windows Server Applications installation (blue spinning arrows while running)
+
+.Workflow Execution Status
+image::/workflow-action.png[Workflow Running Status]
 
 [NOTE]
 ====
-This backup process takes approximately 6-7 minutes. Feel free to proceed with other tasks while it runs - Ansible jobs can run in parallel safely!
+The complete workflow takes approximately 3-4 minutes. Both Windows servers will be configured with necessary registry changes and applications required by development teams.
 ====
 
-.XFS Backup Process
-image::xfsbackup.png[XFS Backup in Progress]
+==== Step 5: Verify Application Deployment
 
-==== Step 3: Verify Backup Creation
+. Click on the *Windows Server Applications* icon in the Visualizer
+. Review the job output to verify deployed applications
+. Notice packages like procexp, windirstat, and other development tools have been installed
 
-Once the backup completes:
+.Application Installation Results
+image::/apps.png[Installed Applications]
 
-. Launch the *Check RHEL Backups* template again
-. Verify that backups are now available on each server
+=== Exercise 2: Domain Controller Configuration
 
-.Backup Verification
-image::afterbackupcheck.png[Backup Check After Creation]
+==== Understanding the New Request
 
-=== Exercise 2: Windows System Snapshots
+.Support Ticket #002
+image::/ticket02.png[Support Ticket 002]
 
-Windows systems have built-in Volume Shadow Copy Service (VSS) snapshotting capabilities. While your organization may use third-party backup tools, VSS snapshots are essential for database systems as they allow backups without locking active files.
+A new infrastructure request has arrived from the operations team:
+- Configure one Windows server as a domain controller
+- Prepare another server for database services
+- Ensure compliance with organizational policies
 
-==== Step 1: Create VSS Snapshots
+Your Windows SMEs have provided job templates to deploy this environment consistently.
+
+==== Step 1: Verify Current Server State
+
+. Navigate to the `windows` tab
+. Click the *Start/Windows* button and open *Server Manager*
+. Select *Local Server*
+. Verify the server is currently part of the default *WORKGROUP* with limited services
+
+.Current Server Configuration
+image::/workgroup.png[Workgroup Configuration]
+
+==== Step 2: Configure Secure Credentials
+
+. Navigate to your `aap` tab
+. Go to *Automation Execution* → *Templates*
+. Edit the *Windows Domain Controller* template
+
+Your Windows team has provided an Ansible Vault for secure credential storage. This ensures Active Directory credentials remain encrypted and protected.
+
+===== Adding Vault Credentials:
+
+. Click *Edit template*
+. In the *Credentials* section, add the *Windows Vault* credential
+. Save the job template
+
+.Vault Credential Configuration
+image::/vault.png[Vault Credential Setup]
+
+[IMPORTANT]
+====
+Ansible Vault credentials ensure sensitive information remains encrypted and secure. You don't have direct access to the credentials, maintaining security best practices.
+====
+
+==== Step 3: Deploy Active Directory
+
+. Launch the job template using *Launch template*
+. Monitor the output as each task executes
+
+.Domain Configuration Process
+image::/dnsdomain.png[DNS Domain Configuration]
+
+The template will display the domain/forest information generated by the environment. Record this domain detail for future reference.
+
+[NOTE]
+====
+This process takes several minutes to deploy Active Directory and reboot the system. After reboot, default Group Policies will also be applied.
+====
+
+==== Step 4: Verify Domain Controller Configuration
+
+After the system reboots:
+
+. Click *Start/Windows* and open *Server Manager*
+. Verify the domain now reflects your DNS domain from the template output
+. Confirm that *DNS* and *Active Directory* services are running
+
+.Active Directory Services
+image::/assets/domain.png[Active Directory Configuration]
+
+=== Exercise 3: RHEL Server Deployment
+
+==== Expanding Infrastructure
+
+With Active Directory configured and Windows servers deployed, the next step involves deploying a RHEL system for streaming applications. Your standardized build templates will streamline this process.
+
+[NOTE]
+====
+This exercise simulates provisioning tasks. In production environments, you would customize instance configurations to meet specific requirements.
+====
+
+==== Step 1: Review Current Inventory
+
+. Navigate to *Automation Execution* → *Infrastructure* → *Inventories*
+. Examine existing inventories:
+  - Network environments
+  - Windows environments  
+  - Video Platform Inventory (currently contains only a loadbalancer group)
+
+.Current Inventory State
+image::/invbefore.png[Inventory Before Deployment]
+
+You need to deploy a RHEL system and configure a webservers group for future use.
+
+==== Step 2: Deploy New Node
 
 . Navigate to *Automation Execution* → *Templates*
-. Launch the *Server Snapshot - VSS/Windows* template
+. Launch the *Deploy Node* template
+. When prompted for the node name, enter: `node01`
+. Submit the job
 
-.Windows VSS Snapshot
-image::vss-snap.png[Windows VSS Snapshot Creation]
+[TIP]
+====
+In this simulated environment, we use configuration as code to build inventory. With inventory plugins, you could synchronize against an inventory source.
+====
 
-==== Step 2: Verify Snapshot Creation
+==== Step 3: Verify Inventory Updates
 
-. Navigate to *Automation Execution* → *Templates*
-. Execute the *Check Windows Backups* template
+. Once the job completes, navigate to *Automation Execution* → *Infrastructure* → *Inventories*
+. Observe the new *webservers* group with your new node in the *Video Platform Inventory*
 
-.VSS Snapshot Verification
-image::vss-snap-check.png[VSS Snapshot Check]
-
-Great! The VSS snapshot has been successfully created.
-
-==== Step 3: Schedule Automated Snapshots
-
-To automate recurring snapshots without manual intervention:
-
-. Navigate to *Automation Execution* → *Templates*
-. Select *Server Backup - VSS/Windows*
-. Click on the *Schedules* tab
-. Click *Create schedule*
-
-.Schedule Configuration
-image::win-shed.png[Windows Schedule Setup]
-
-===== Schedule Configuration Details:
-
-* *Schedule Name:* `5 Min Snappy`
-* *Description:* `Automated VSS Snaps`
-* *Start date/time:* Leave as default
-* *Time Zone:* Leave as default
-
-===== Frequency Settings:
-
-. Click *Next*
-. Set *Frequency* to `Minutely`
-. Set *Interval* to `5`
-. Select *Save rule* and click *Next*
-. Skip exceptions (click *Next*)
-. Click *Finish*
-
-.Schedule Details
-image::shed-details.png[Schedule Configuration Details]
-
-Perfect! Your automated snapshot schedule is now configured.
+.Updated Inventory State
+image::/invafter.png[Inventory After Deployment]
 
 == Code Reference
 
-=== XFS Backup Automation
+=== Windows Application Installation with Chocolatey
 
-Here's the key Ansible code used for XFS backups:
+Here's the automation code for installing standardized Windows applications:
 
 [source,yaml]
 ----
 tasks:
-  - name: Check if xfsdump is installed
-    ansible.builtin.yum:
-      name: xfsdump
+  - name: Ensure Chocolatey is installed
+    win_chocolatey:
+      name: chocolatey
       state: present
-    when: ansible_facts.os_family == "RedHat"
 
-  - name: Ensure the backup directory exists
-    ansible.builtin.file:
-      path: "{{ backup_file | dirname }}"
-      state: directory
-      mode: '0755'
+  - name: Install multiple packages sequentially
+    win_chocolatey:
+      name: '{{ item }}'
+      state: present
+    loop:
+      - procexp
+      - windirstat
+      - 7zip
+      - git
+      - python
 
-  - name: Perform xfsdump backup
-    ansible.builtin.command:
-      cmd: >
-        xfsdump -l 0 -L {{ backup_label }}
-        -f {{ backup_file }} {{ xfs_mount_point }}
-    register: backup_result
-    ignore_errors: no
+  - name: Check python version
+    ansible.windows.win_command: python --version
+    register: check_python_version
 
-  - name: Verify xfsdump success
+  - name: Show python version
     ansible.builtin.debug:
-      msg: "Backup completed successfully: {{ backup_result.stdout }}"
+      msg: Python Version is {{ check_python_version.stdout_lines[0] }}
 ----
+
+=== Domain Controller Promotion
+
+Here's the code for promoting Windows servers to domain controllers:
+
+[source,yaml]
+----
+tasks:
+  - name: Ensure local Administrator account has a password
+    ansible.windows.win_user:
+      name: "{{ username }}"
+      password: "{{ user_password }}"
+
+  - name: Promote system to a domain Controller
+    microsoft.ad.domain:
+      dns_domain_name: "{{ wins_domain }}"
+      safe_mode_password: "{{ safe_password }}"
+      domain_mode: Win2012R2
+      forest_mode: Win2012R2
+      reboot: true
+
+  - name: Firewall rule to allow RDP on TCP port 5986
+    win_firewall_rule:
+      name: WinRM
+      localport: 5986
+      action: allow
+      direction: in
+      protocol: tcp
+      profiles: domain,private,public
+      state: present
+      enabled: yes
+----
+
+== Key Takeaways
+
+You've successfully demonstrated advanced Ansible automation capabilities:
+
+* ✅ **Workflow Orchestration**: Created complex workflows combining multiple job templates
+* ✅ **Secure Credential Management**: Implemented Ansible Vault for sensitive data protection  
+* ✅ **Standardized Deployments**: Applied consistent configurations across multiple environments
+* ✅ **Infrastructure as Code**: Managed inventory through automated provisioning
+* ✅ **Multi-Platform Management**: Orchestrated both Windows and Linux system deployments
 
 == Next Steps
 
-You've successfully completed the backup automation exercises! You now have:
+With these advanced automation skills, you're ready for enterprise-scale scenarios:
 
-* ✅ Automated Linux XFS backups
-* ✅ Windows VSS snapshots
-* ✅ Scheduled recurring snapshots
-* ✅ Verification procedures for both systems
+**Immediate Opportunities:**
+- Expand workflows to include testing and validation steps
+- Implement approval processes for production deployments
+- Create environment-specific variable management
+- Develop rollback procedures for failed deployments
 
-This foundation in read-only automation tasks will help you build confidence for more complex automation scenarios in the future.
+**Advanced Automation Patterns:**
+- Implement blue-green deployment strategies
+- Create self-healing infrastructure workflows
+- Build compliance validation into deployment pipelines
+- Develop automated disaster recovery procedures
+
+**Organizational Benefits:**
+- Reduced deployment time from hours to minutes
+- Eliminated configuration drift across environments
+- Improved security through encrypted credential management
+- Enhanced collaboration between development and operations teams
+
+You've now demonstrated how Ansible Automation Platform transforms manual, error-prone processes into reliable, repeatable automation that scales across your entire infrastructure.
