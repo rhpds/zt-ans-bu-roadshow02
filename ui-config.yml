@@ -17,28 +17,16 @@ antora:
 tabs:
   - name: aap
     url: https://control-${guid}.${domain}/
-  # - name: gitea
-  #   url: https://gitea-${guid}.${domain}/
     external: false
-  - name: Report Server
-    url: https://node03-${guid}.${domain}/index.html
+  - name: Windows
+    url: https://windows-ironrdp-${guid}.${domain}/
     external: false
-  - name: Compliance Report
-    url: https://node02-${guid}.${domain}/oscap-reports/ospp/
+  - name: Webapp-windows
+    url: https://dbserver-${guid}.${domain}/
     external: false
-  # - name: Windows RDP
-  #   url: https://windows-ironrdp-${guid}.${domain}/
-  #   external: false
-  - name: Windows UI
-    url: https://windows-${guid}.${domain}/
+  - name: Webapp-rhel
+    url: https://node01-${guid}.${domain}/
     external: false
-  # - name: ">_ control"
-  #   url: /wetty
-  # - name: ">_ node01"
-  #   url: /wetty_node01
-  # - name: ">_ node02"
-  #   url: /wetty_node02
-  # - name: ">_ node03"
-  #   url: /wetty_node03
-  # - name: Cloud (PoC)
-  #   url: /cloud
+  - name: loadbalancer
+    url: https://haproxy-${guid}.${domain}/
+    external: false
