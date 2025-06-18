@@ -1,13 +1,5 @@
 #!/bin/bash
-
-systemctl stop systemd-tmpfiles-setup.service
-systemctl disable systemd-tmpfiles-setup.service
-
-# Install collection(s)
-ansible-galaxy collection install ansible.eda
-ansible-galaxy collection install community.general
-ansible-galaxy collection install ansible.windows
-ansible-galaxy collection install microsoft.ad
+su rhel -c 'ssh-keygen -f /home/rhel/.ssh/id_rsa -q -N ""'
 
 # # ## setup rhel user
 # touch /etc/sudoers.d/rhel_sudoers
@@ -84,8 +76,8 @@ tee /tmp/setup.yml << EOF
       controller_password: ansible123!
       validate_certs: false
       inputs:
-        username: instruqt
-        password: Passw0rd!
+        username: Administrator
+        password: Ansible123!
 
   - name: add Cisco machine credential
     ansible.controller.credential:
@@ -317,8 +309,8 @@ tee /tmp/setup.yml << EOF
         ansible_winrm_server_cert_validation: ignore
         ansible_winrm_transport: credssp
       controller_host: "https://localhost"
-      controller_username: Administrator
-      controller_password: Ansible123!
+      controller_username: admin
+      controller_password: ansible123!
       validate_certs: false
 
   - name: Create group with extra vars
@@ -334,8 +326,8 @@ tee /tmp/setup.yml << EOF
         ansible_winrm_server_cert_validation: ignore
         ansible_winrm_transport: credssp
       controller_host: "https://localhost"
-      controller_username: Administrator
-      controller_password: Ansible123!
+      controller_username: admin
+      controller_password: ansible123!
       validate_certs: false
 
   - name: Create group with extra vars
@@ -703,4 +695,4 @@ tee /tmp/setup.yml << EOF
 EOF
 
 
-ANSIBLE_COLLECTIONS_PATH=/tmp/ansible-automation-platform-containerized-setup-bundle-2.5-9-x86_64/collections/:/root/.ansible/collections/ansible_collections/ ansible-playbook -i /tmp/inventory /tmp/setup.yml
+ANSIBLE_COLLECTIONS_PATH=/root/.ansible/collections/ansible_collections/ ansible-playbook -i /tmp/inventory /tmp/setup.yml
