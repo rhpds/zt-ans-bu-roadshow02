@@ -38,7 +38,7 @@ EOF
 # sudo chown rhel:rhel /tmp/inventory
 
 
-# # # creates a playbook to setup environment
+# creates a playbook to setup environment
 tee /tmp/setup.yml << EOF
 ---
 ### Automation Controller setup 
@@ -49,16 +49,24 @@ tee /tmp/setup.yml << EOF
   collections:
     - ansible.controller
   vars:
-    GUID: "{{ lookup('env', 'GUID') | default('GUID_NOT_FOUND', true) }}"
-    DOMAIN: "{{ lookup('env', 'DOMAIN') | default('DOMAIN_NOT_FOUND', true) }}"
+    SANDBOX_ID: "{{ lookup('env', '_SANDBOX_ID') | default('SANDBOX_ID_NOT_FOUND', true) }}"
+    SN_HOST_VAR: "{{ '{{' }} SN_HOST {{ '}}' }}"
+    SN_USER_VAR: "{{ '{{' }} SN_USERNAME {{ '}}' }}"
+    SN_PASSWORD_VAR: "{{ '{{' }} SN_PASSWORD {{ '}}' }}"
+    MICROSOFT_AD_LDAP_SERVER_VAR: "{{ '{{' }} MICROSOFT_AD_LDAP_SERVER {{ '}}' }}"
+    MICROSOFT_AD_LDAP_PASSWORD_VAR: "{{ '{{' }} MICROSOFT_AD_LDAP_PASSWORD {{ '}}' }}"
+    MICROSOFT_AD_LDAP_USERNAME_VAR: "{{ '{{' }} MICROSOFT_AD_LDAP_USERNAME {{ '}}' }}"
+
   tasks:
+
+###############CREDENTIALS###############
 
   - name: (EXECUTION) add App machine credential
     ansible.controller.credential:
       name: 'Application Nodes'
       organization: Default
       credential_type: Machine
-      controller_host: "https://localhost"
+      controller_host: "https://{{ ansible_host }}"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
@@ -68,7 +76,7 @@ tee /tmp/setup.yml << EOF
 
   - name: (EXECUTION) add Windows machine credential
     ansible.controller.credential:
-      name: 'Windows Nodes'
+      name: 'Windows DB Nodes'
       organization: Default
       credential_type: Machine
       controller_host: "https://localhost"
@@ -76,21 +84,50 @@ tee /tmp/setup.yml << EOF
       controller_password: ansible123!
       validate_certs: false
       inputs:
-        username: Administrator
-        password: Ansible123!
+        username: instruqt
+        password: Passw0rd!
 
-  - name: (EXECUTION) add Arista credential
+  - name: add Cisco machine credential
     ansible.controller.credential:
-      name: 'Arista Network'
+      name: 'Network'
       organization: Default
       credential_type: Machine
+      controller_host: "https://{{ ansible_host }}"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+      inputs:
+       username: joe
+      # password: secret
+       ssh_key_data: "{{ lookup('file', '/home/rhel/.ssh/id_rsa') }}"
+      # ssh_key_unlock: "passphrase"
+
+  - name: (EXECUTION) add Vault
+    ansible.controller.credential:
+      name: 'Windows Vault'
+      organization: Default
+      credential_type: Vault
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
       inputs:
-        username: ansible
-        password: ansible
+        vault_password: ansible
+
+  - name: (EXECUTION) add Controller Vault
+    ansible.controller.credential:
+      name: 'Controller Vault'
+      organization: Default
+      credential_type: Vault
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+      inputs:
+        vault_password: ansible
+
+
+###############EE###############
 
   - name: Add Network EE
     ansible.controller.execution_environment:
@@ -104,20 +141,31 @@ tee /tmp/setup.yml << EOF
   - name: Add Windows EE
     ansible.controller.execution_environment:
       name: "Windows_ee"
-      image: quay.io/acme_corp/windows-ee
+      image: quay.io/nmartins/windows_ee_rs
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
 
-  - name: Add RHEL EE
+  - name: Add EE to the controller instance
     ansible.controller.execution_environment:
-      name: "Rhel_ee"
-      image: quay.io/acme_corp/rhel_90_ee
+      name: "RHEL EE"
+      image: quay.io/acme_corp/rhel_90_ee_25:latest
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
+
+  - name: Add EE to the controller instance
+    ansible.controller.execution_environment:
+      name: "Controller_ee"
+      image: quay.io/nmartins/cac-25_ee
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+
+###############INVENTORY###############
 
   - name: Add Video platform inventory
     ansible.controller.inventory:
@@ -142,40 +190,36 @@ tee /tmp/setup.yml << EOF
       controller_password: ansible123!
       validate_certs: false
     loop:
-      - node01
-      - node02
-      - node03
- 
+      - haproxy
+      - DBServer01
+
+  # - name: Add Streaming server group
+  #   ansible.controller.group:
+  #     name: "webservers"
+  #     description: "Application Nodes"
+  #     inventory: "Video Platform Inventory"
+  #     hosts:
+  #       - DBServer01
+  #     variables:
+  #       ansible_user: rhel
+  #     controller_host: "https://localhost"
+  #     controller_username: admin
+  #     controller_password: ansible123!
+  #     validate_certs: false
+
   - name: Add Streaming server group
     ansible.controller.group:
-      name: "Streaming_Infrastucture"
-      description: "Streaming Nodes"
+      name: "loadbalancer"
+      description: "Application Nodes"
       inventory: "Video Platform Inventory"
       hosts:
-        - node01
-        - node02
-        - node03
+        - haproxy
       variables:
         ansible_user: rhel
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
-
-  - name: Add Streaming server group
-    ansible.controller.group:
-      name: "Reporting"
-      description: "Report Servers"
-      inventory: "Video Platform Inventory"
-      hosts:
-        - node03
-      variables:
-        ansible_user: rhel
-      controller_host: "https://localhost"
-      controller_username: admin
-      controller_password: ansible123!
-      validate_certs: false
-
 
   #   # Network
  
@@ -190,101 +234,40 @@ tee /tmp/setup.yml << EOF
       controller_password: ansible123!
       validate_certs: false
 
-  - name: Add CEOS1
+  - name: Add Cisco
     ansible.controller.host:
-      name: "ceos01"
+      name: "cisco"
       description: "Edge Leaf"
       inventory: "Edge Network"
       state: present
       enabled: true
-      controller_host: "https://localhost"
-      controller_username: admin
-      controller_password: ansible123!
-      validate_certs: false
-      variables:
-        ansible_host: node02
-        ansible_port: 2001
-
-  - name: Add CEOS2
-    ansible.controller.host:
-      name: "ceos02"
-      description: "Edge Leaf"
-      inventory: "Edge Network"
-      state: present
-      enabled: true
-      controller_host: "https://localhost"
-      controller_username: admin
-      controller_password: ansible123!
-      validate_certs: false
-      variables:
-        ansible_host: node02
-        ansible_port: 2002
-
-  - name: Add CEOS3
-    ansible.controller.host:
-      name: "ceos03"
-      description: "Edge Leaf"
-      inventory: "Edge Network"
-      state: present
-      enabled: true
-      controller_host: "https://localhost"
-      controller_username: admin
-      controller_password: ansible123!
-      validate_certs: false
-      variables:
-        ansible_host: node02
-        ansible_port: 2003
-
-  - name: Add EOS Network Group
-    ansible.controller.group:
-      name: "Delivery_Network"
-      description: "EOS Network"
-      inventory: "Edge Network"
-      hosts:
-        - ceos01
-        - ceos02
-        - ceos03
-      variables:
-        ansible_user: ansible
-        ansible_connection: ansible.netcommon.network_cli 
-        ansible_network_os: arista.eos.eos 
-        ansible_password: ansible 
-        ansible_become: yes 
-        ansible_become_method: enable
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
       
-  #   ## Extra Inventories 
-
-  # - name: Add Storage Infrastructure
-  #   ansible.controller.inventory:
-  #    name: "Cache Storage"
-  #    description: "Edge NAS Storage"
-  #    organization: "Default"
-  #    state: present
-  #    controller_host: "https://localhost"
-  #    controller_username: admin
-  #    controller_password: ansible123!
-  #    validate_certs: false
-
-  # - name: Add Storage Node
-  #   ansible.controller.host:
-  #    name: "Storage01"
-  #    description: "Edge NAS Storage"
-  #    inventory: "Cache Storage"
-  #    state: present
-  #    enabled: true
-  #    controller_host: "https://localhost"
-  #    controller_username: admin
-  #    controller_password: ansible123!
-  #    validate_certs: false
+  - name: Add CORE Network Group
+    ansible.controller.group:
+      name: "Core"
+      description: "EOS Network"
+      inventory: "Edge Network"
+      hosts:
+        - cisco
+      variables:
+        ansible_user: admin
+        ansible_network_os: cisco.ios.ios
+        ansible_connection: network_cli
+        ansible_become: yes
+        ansible_become_method: enable
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
 
   - name:  Add Windows Inventory
     ansible.controller.inventory:
-     name: "Windows Directory Servers"
-     description: "AD Infrastructure"
+     name: "Windows Servers"
+     description: "Win Infrastructure"
      organization: "Default"
      state: present
      controller_host: "https://localhost"
@@ -294,9 +277,9 @@ tee /tmp/setup.yml << EOF
 
   - name: Add Windows Inventory Host
     ansible.controller.host:
-     name: "windows"
+     name: "WindowsAD01"
      description: "Directory Servers"
-     inventory: "Windows Directory Servers"
+     inventory: "Windows Servers"
      state: present
      enabled: true
      controller_host: "https://localhost"
@@ -306,12 +289,61 @@ tee /tmp/setup.yml << EOF
      variables:
        ansible_host: windows
 
+  - name: Add Windows Inventory Host
+    ansible.controller.host:
+     name: "DBServer01"
+     description: "Database Server"
+     inventory: "Windows Servers"
+     state: present
+     enabled: true
+     controller_host: "https://localhost"
+     controller_username: admin
+     controller_password: ansible123!
+     validate_certs: false
+     variables:
+       ansible_host: dbserver
+
+  - name: Create group with extra vars
+    ansible.controller.group:
+      name: "windows"
+      inventory: "Windows Servers"
+      hosts:
+        - WindowsAD01
+        - DBServer01
+      state: present
+      variables:
+        ansible_connection: winrm
+        ansible_port: 5986
+        ansible_winrm_server_cert_validation: ignore
+        ansible_winrm_transport: credssp
+      controller_host: "https://localhost"
+      controller_username: Administrator
+      controller_password: Ansible123!
+      validate_certs: false
+
   - name: Create group with extra vars
     ansible.controller.group:
       name: "domain_controllers"
-      inventory: "Windows Directory Servers"
+      inventory: "Windows Servers"
       hosts:
-        - windows
+        - WindowsAD01
+      state: present
+      variables:
+        ansible_connection: winrm
+        ansible_port: 5986
+        ansible_winrm_server_cert_validation: ignore
+        ansible_winrm_transport: credssp
+      controller_host: "https://localhost"
+      controller_username: Administrator
+      controller_password: Ansible123!
+      validate_certs: false
+
+  - name: Create group with extra vars
+    ansible.controller.group:
+      name: "database_servers"
+      inventory: "Windows Servers"
+      hosts:
+        - DBServer01
       state: present
       variables:
         ansible_connection: winrm
@@ -322,8 +354,11 @@ tee /tmp/setup.yml << EOF
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
+
         
-  - name: (EXECUTION) Add project
+###############TEMPLATES###############
+
+  - name: Add project roadshow
     ansible.controller.project:
       name: "Roadshow"
       description: "Roadshow Content"
@@ -336,31 +371,14 @@ tee /tmp/setup.yml << EOF
       controller_password: ansible123!
       validate_certs: false
 
-  #- name: (DECISIONS) Create an AAP Credential
-  #  ansible.eda.credential:
-  #    name: "AAP"
-  #    description: "To execute jobs from EDA"
-  #    inputs:
-  #      host: "https://control-{{ GUID }}.{{ DOMAIN }}/api/controller/"
-  #      username: "admin"
-  #      password: "ansible123!"
-  #    credential_type_name: "Red Hat Ansible Automation Platform"
-  #    organization_name: Default
-  #    controller_host: https://localhost
-  #    controller_username: admin
-  #    controller_password: ansible123!
-  #    validate_certs: false
-
-###############TEMPLATES###############
-
-  # - name: Add System Report
+  # - name: Add Get IP Template
   #   ansible.controller.job_template:
-  #     name: "System Report"
+  #     name: "Get Server IP"
   #     job_type: "run"
   #     organization: "Default"
   #     inventory: "Video Platform Inventory"
   #     project: "Roadshow"
-  #     playbook: "playbooks/section01/server_re[ort].yml"
+  #     playbook: "playbooks/section02/get_ip.yml"
   #     execution_environment: "RHEL EE"
   #     credentials:
   #       - "Application Nodes"
@@ -370,65 +388,259 @@ tee /tmp/setup.yml << EOF
   #     controller_password: ansible123!
   #     validate_certs: false
 
+  - name: Add Windows Setup Template
+    ansible.controller.job_template:
+      name: "Windows Domain Controller"
+      job_type: "run"
+      organization: "Default"
+      inventory: "Windows Servers"
+      project: "Roadshow"
+      playbook: "playbooks/section02/windows_ad.yml"
+      execution_environment: "Windows_ee"
+      credentials:
+        - "Windows DB Nodes"
+      state: "present"
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+
+  - name: Add Windows App Template
+    ansible.controller.job_template:
+      name: "Windows Server Applications"
+      job_type: "run"
+      organization: "Default"
+      inventory: "Windows Servers"
+      project: "Roadshow"
+      playbook: "playbooks/section02/windows_apps.yml"
+      execution_environment: "Windows_ee"
+      credentials:
+        - "Windows DB Nodes"
+      state: "present"
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+
   # - name: Add Windows Setup Template
   #   ansible.controller.job_template:
-  #     name: "Windows Patching Report"
+  #     name: "Windows Users/Groups"
   #     job_type: "run"
   #     organization: "Default"
-  #     inventory: "Windows Directory Servers"
+  #     inventory: "Windows Servers"
   #     project: "Roadshow"
-  #     playbook: "playbooks/section01/windows_report.yml"
+  #     playbook: "playbooks/section02/users_groups.yml"
   #     execution_environment: "Windows_ee"
   #     credentials:
-  #       - "Windows Nodes"
+  #       - "Windows DB Nodes"
+  #       - "Windows Vault"
   #     state: "present"
   #     controller_host: "https://localhost"
   #     controller_username: admin
   #     controller_password: ansible123!
   #     validate_certs: false
 
-  - name: Add Rhel Report Template
+  - name: Add Windows Setup Template
     ansible.controller.job_template:
-      name: "Application Server Report"
+      name: "Windows Registry keys"
       job_type: "run"
       organization: "Default"
-      inventory: "Video Platform Inventory"
+      inventory: "Windows Servers"
       project: "Roadshow"
-      playbook: "playbooks/section01/rhel_report.yml"
-      execution_environment: "Rhel_ee"
+      playbook: "playbooks/section02/registry_keys.yml"
+      execution_environment: "Windows_ee"
       credentials:
-        - "Application Nodes"
+        - "Windows DB Nodes"
+      state: "present"
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+
+  # - name: Add Windows App Template
+  #   ansible.controller.job_template:
+  #     name: "Windows Install Application"
+  #     job_type: "run"
+  #     organization: "Default"
+  #     inventory: "Windows Servers"
+  #     project: "Roadshow"
+  #     playbook: "playbooks/section02/windows_install_app.yml"
+  #     execution_environment: "Windows_ee"
+  #     credentials:
+  #       - "Windows DB Nodes"
+  #     state: "present"
+  #     survey_enabled: true
+  #     survey_spec:
+  #          {
+  #            "name": "Install Applications",
+  #            "description": "Install using Chocolatey",
+  #            "spec": [
+  #              {
+  #   	          "type": "text",
+  #   	          "question_name": "Please provide the application you want to install",
+  #             	"question_description": "Application from Chocolatey",
+  #             	"variable": "application",
+  #             	"required": true,
+  #              },
+  #             ]
+  #          }
+  #     controller_host: "https://localhost"
+  #     controller_username: admin
+  #     controller_password: ansible123!
+  #     validate_certs: false
+
+  - name: Add Windows OU Template
+    ansible.controller.job_template:
+      name: "Windows Users and OU"
+      job_type: "run"
+      organization: "Default"
+      inventory: "Windows Servers"
+      project: "Roadshow"
+      playbook: "playbooks/section02/users_groups.yml"
+      execution_environment: "Windows_ee"
+      credentials:
+        - "Windows DB Nodes"
+        - "Windows Vault"
       state: "present"
       survey_enabled: true
       survey_spec:
            {
-             "name": "Report Details",
-             "description": "Report components needed",
+             "name": "Configure OU and Groups",
+             "description": "Domain accounts",
              "spec": [
                {
-    	          "type": "multiplechoice",
-    	          "question_name": "What data are you looking for ?",
-              	"question_description": "Defined data",
-              	"variable": "report_type",
-                "choices": ["All","Storage Usage","User List","OS Versions"],
-                "required": true
+    	          "type": "text",
+    	          "question_name": "Please provide the OU you want to create",
+              	"question_description": "Automaton OU",
+              	"variable": "org_unit",
+              	"required": true,
+               },
+               {
+    	          "type": "text",
+    	          "question_name": "Please Provide your group:",
+              	"question_description": "User Group",
+              	"variable": "group_name",
+              	"required": true,
                }
-             ]
+              ]
            }
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
 
-  - name: Add OSCAP Setup Template
+  - name: Add Windows Setup Template
     ansible.controller.job_template:
-      name: "OpenSCAP Report"
+      name: "Windows Join Domain"
+      job_type: "run"
+      organization: "Default"
+      inventory: "Windows Servers"
+      project: "Roadshow"
+      playbook: "playbooks/section02/join_ad.yml"
+      execution_environment: "Windows_ee"
+      credentials:
+        - "Windows DB Nodes"
+        - "Windows Vault"
+      state: "present"
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+
+  - name: Add Node-Provision Setup Template
+    ansible.controller.job_template:
+      name: "Deploy Node"
+      job_type: "run"
+      organization: "Default"
+      inventory: "Demo Inventory"
+      project: "Roadshow"
+      playbook: "playbooks/section02/deploy_node.yml"
+      execution_environment: "Controller_ee"
+      credentials:
+        - "Application Nodes"
+        - 'Controller Vault'
+      state: "present"
+      survey_enabled: true
+      survey_spec:
+           {
+             "name": "Provision System",
+             "description": "System Name",
+             "spec": [
+               {
+    	          "type": "text",
+    	          "question_name": "Please provide the name of your system",
+              	"question_description": "Node Number",
+              	"variable": "node_name",
+              	"required": true,
+               }
+              ]
+           }
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+
+  # - name: Add Windows Setup Template
+  #   ansible.controller.job_template:
+  #     name: "RHEL Join Domain"
+  #     job_type: "run"
+  #     organization: "Default"
+  #     inventory: "Video Platform Inventory"
+  #     project: "Roadshow"
+  #     playbook: "playbooks/section02/join_ad.yml"
+  #     execution_environment: "Windows_ee"
+  #     credentials:
+  #       - "Windows DB Nodes"
+  #       - "Windows Vault"
+  #     state: "present"
+  #     controller_host: "https://localhost"
+  #     controller_username: admin
+  #     controller_password: ansible123!
+  #     validate_certs: false
+
+  # - name: Add Cisco Setup Template
+  #   ansible.controller.job_template:
+  #     name: "Network Changes"
+  #     job_type: "run"
+  #     organization: "Default"
+  #     inventory: "Core"
+  #     project: "Roadshow"
+  #     playbook: "playbooks/section02/network_config.yml"
+  #     execution_environment: "Edge_Network_ee"
+  #     credentials:
+  #       - "Network"
+  #     state: "present"
+  #     controller_host: "https://localhost"
+  #     controller_username: admin
+  #     controller_password: ansible123!
+  #     validate_certs: false
+
+  - name: Add Windows Application Template
+    ansible.controller.job_template:
+      name: "Windows Deploy WebApp"
+      job_type: "run"
+      organization: "Default"
+      inventory: "Windows Servers"
+      project: "Roadshow"
+      playbook: "playbooks/section02/windows_webapp.yml"
+      execution_environment: "Windows_ee"
+      credentials:
+        - "Windows DB Nodes"
+      state: "present"
+      controller_host: "https://localhost"
+      controller_username: admin
+      controller_password: ansible123!
+      validate_certs: false
+
+  - name: Add RHEL Application Template
+    ansible.controller.job_template:
+      name: "RHEL Deploy WebApp"
       job_type: "run"
       organization: "Default"
       inventory: "Video Platform Inventory"
       project: "Roadshow"
-      playbook: "playbooks/section01/rhel_compliance_report.yml"
-      execution_environment: "Rhel_ee"
+      playbook: "playbooks/section02/rhel_webapp.yml"
+      execution_environment: "RHEL EE"
       credentials:
         - "Application Nodes"
       state: "present"
@@ -437,101 +649,58 @@ tee /tmp/setup.yml << EOF
       controller_password: ansible123!
       validate_certs: false
 
-  - name: Add Windows Update Report Template
+  - name: Add RHEL LDAP Template
     ansible.controller.job_template:
-      name: "Windows Update Report"
-      job_type: "run"
-      organization: "Default"
-      inventory: "Windows Directory Servers"
-      project: "Roadshow"
-      playbook: "playbooks/section01/windows_update_report.yml"
-      execution_environment: "Windows_ee"
-      credentials:
-        - "Windows Nodes"
-      state: "present"
-      controller_host: "https://localhost"
-      controller_username: admin
-      controller_password: ansible123!
-      validate_certs: false
-
-  - name: Add RHEL Backup
-    ansible.controller.job_template:
-      name: "Server Backup - XFS/RHEL"
+      name: "RHEL Join AD"
       job_type: "run"
       organization: "Default"
       inventory: "Video Platform Inventory"
       project: "Roadshow"
-      playbook: "playbooks/section01/xfs_backup.yml"
-      execution_environment: "Rhel_ee"
+      playbook: "playbooks/section02/join_ad_rhel.yml"
+      execution_environment: "RHEL EE"
       credentials:
         - "Application Nodes"
+        - "Controller Vault"
       state: "present"
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
 
-  - name: Add RHEL Backup Check
+  - name: Add HAproxy Setup Template
     ansible.controller.job_template:
-      name: "Check RHEL Backup"
+      name: "Configure Loadbalancer"
       job_type: "run"
       organization: "Default"
       inventory: "Video Platform Inventory"
       project: "Roadshow"
-      playbook: "playbooks/section01/check_backups.yml"
-      execution_environment: "Rhel_ee"
+      playbook: "playbooks/section02/mod_haproxy.yml"
+      execution_environment: "RHEL EE"
       credentials:
         - "Application Nodes"
       state: "present"
+      survey_enabled: true
+      survey_spec:
+           {
+             "name": "Add system to loadbalancer",
+             "description": "System Name",
+             "spec": [
+               {
+    	          "type": "text",
+    	          "question_name": "Please provide the name of your system",
+              	"question_description": "Machine",
+              	"variable": "host",
+              	"required": true,
+               }
+              ]
+           }
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
       validate_certs: false
 
-
-  - name: Add Windows Backup 
-    ansible.controller.job_template:
-      name: "Server Backup - VSS/Windows"
-      job_type: "run"
-      organization: "Default"
-      inventory: "Windows Directory Servers"
-      project: "Roadshow"
-      playbook: "playbooks/section01/vss_windows.yml"
-      execution_environment: "Windows_ee"
-      credentials:
-        - "Windows Nodes"
-      state: "present"
-      controller_host: "https://localhost"
-      controller_username: admin
-      controller_password: ansible123!
-      validate_certs: false
-
-  - name: Add Windows Backup Check
-    ansible.controller.job_template:
-      name: "Check Windows Backups"
-      job_type: "run"
-      organization: "Default"
-      inventory: "Windows Directory Servers"
-      project: "Roadshow"
-      playbook: "playbooks/section01/check_windowsvss.yml"
-      execution_environment: "Windows_ee"
-      credentials:
-        - "Windows Nodes"
-      state: "present"
-      controller_host: "https://localhost"
-      controller_username: admin
-      controller_password: ansible123!
-      validate_certs: false
 
 EOF
-
-# # # chown files
-# sudo chown rhel:rhel /tmp/setup.yml
-# sudo chown rhel:rhel /tmp/inventory
-# sudo chown rhel:rhel /tmp/git-setup.yml
-
-# # # execute above playbook
-
 
 
 ANSIBLE_COLLECTIONS_PATH=/tmp/ansible-automation-platform-containerized-setup-bundle-2.5-9-x86_64/collections/:/root/.ansible/collections/ansible_collections/ ansible-playbook -i /tmp/inventory /tmp/setup.yml
