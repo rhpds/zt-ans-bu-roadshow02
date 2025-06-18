@@ -1,192 +1,301 @@
-= Windows Patching Report with Ansible
+= Web Application Deployment and Load Balancing with Ansible
 :toc:
 :toc-placement: auto
 
-== Introduction
+== Scenario 02: Standardized Consistency (Final Phase)
 
-Generating patch reports is a critical operational task for maintaining system security and compliance. When you don't have direct access to Windows systems, Ansible becomes an invaluable tool for gathering patch information and delivering actionable reports to your Windows administration teams.
+=== Introduction
 
-This lab demonstrates how to use Ansible to scan Windows systems for required patches and generate comprehensive reports that can be easily shared with stakeholders.
+Excellent progress! You've reached the final phase of your environment deployment. With your infrastructure, domain services, and user accounts configured, it's time to deploy the actual application that will serve your development teams.
+
+.Final Support Ticket #004
+image::/ticket04.png[Support Ticket 004 - Application Deployment]
+
+This exercise demonstrates how Ansible can orchestrate complex, multi-tier application deployments across hybrid infrastructure while ensuring high availability through load balancing.
 
 === Lab Environment Setup
 
-==== Access Credentials
+Your DNS domain for this lab is: *[[ Instruqt-Var key="DOMAIN" hostname="control" ]]*
 
-[cols="1,1"]
-|===
-| Username | Password
+== Lab Exercises
 
-| admin
-| ansible123!
-|===
+=== Exercise 1: Multi-Platform Web Application Deployment
 
+You'll deploy the same web application across both Windows and RHEL platforms, demonstrating Ansible's ability to manage heterogeneous environments with consistent results.
 
+==== Step 1: Deploy Windows Web Application
 
-== Lab Exercise
+First, let's deploy the web application on your Windows server using IIS:
 
-=== Exercise 1: Creating a Windows Update Report
+. Navigate to your `aap` tab and login
+. Go to *Automation Execution* → *Templates*
+. Launch the *Windows Deploy WebApp* template
 
-We'll create a dynamic patch report using Ansible's templating capabilities and publish it as a web page directly on the Windows host for easy access.
+This automation will:
+- Configure IIS web server on Windows
+- Deploy application files and dependencies
+- Configure proper security and access permissions
+- Start necessary Windows services
 
-==== Step 1: Access the Windows Update Template
+==== Step 2: Verify Windows Deployment
 
-. Navigate to *Automation Execution* → *Templates*
-. Select the *Windows Update Report* template
+Once the template completes:
 
-Before launching the template, we need to configure a survey to allow users to specify which type of updates they want to scan for.
+. Navigate to the `webapp-windows` tab
+. View the deployed web application
 
-.Windows Update Template
-image::update-template.png[Update Template Interface]
+.Windows Web Application
+image::/win-webapp.png[Windows Web Application Interface]
 
-==== Step 2: Configure the Survey
+The application should be running successfully on IIS with proper Windows-specific configuration.
 
-. Navigate to the *Survey* tab
-. Create a new survey question with the following details:
+==== Step 3: Deploy RHEL Web Application
 
-===== Survey Configuration:
+Now deploy the same application on your RHEL server using Apache:
 
-* *Question:* `Which update category are you wanting to search for?`
-* *Description:* `Windows Update Category`
-* *Answer variable name:* `update_category`
-* *Answer type:* `Multiple Choice (single select)`
+. Navigate to *Automation Execution* → *Templates*  
+. Launch the *RHEL Deploy WebApp* template
 
-===== Multiple Choice Options:
+This automation will:
+- Configure Apache web server on RHEL
+- Clone application source code from repository
+- Deploy and configure application files
+- Start Apache services with proper configuration
 
-Add each of the following options (click the + button after entering each option):
+==== Step 4: Verify RHEL Deployment
 
-* Security Updates
-* Critical Updates  
-* Tools
-* Definition Updates
-* Updates
+Once the template completes:
+
+. Navigate to the `webapp-rhel` tab
+. View the deployed web application
+
+.RHEL Web Application
+image::/rhel-webapp.png[RHEL Web Application Interface]
 
 [NOTE]
 ====
-To add each multiple choice option, fill in the field and then click the + button to add it to the list.
+Both deployments use the same source application but with platform-specific configurations, demonstrating Ansible's ability to abstract deployment complexity while maintaining consistency.
 ====
 
-.Survey Configuration
-image::survey.png[Survey Setup Interface]
+=== Exercise 2: Load Balancer Configuration
 
-==== Step 3: Enable and Save the Survey
+With both application servers deployed, you need to configure load balancing to distribute traffic and provide high availability.
 
-. Click *Create survey question* to save your configuration
-. Enable the survey using the toggle at the top of the panel
+==== Step 1: Verify Current Load Balancer State
 
-.Survey Enablement
-image::survey-enable.png[Survey Enable Toggle]
+. Navigate to the `loadbalancer` tab
+. Refresh the page
 
-==== Step 4: Execute the Patch Scan
+.Empty Load Balancer
+image::/loadbalancer.png[Load Balancer Before Configuration]
 
-. Launch the template
-. From the survey dropdown, select *Security Updates*
-. Wait for the template execution to complete
+As expected, there's nothing configured yet - the load balancer needs to be told about your application servers.
 
-The Ansible playbook will connect to the Windows server, scan for available security updates, and generate a comprehensive HTML report.
+==== Step 2: Configure Load Balancer with RHEL Server
 
-==== Step 5: Review the Generated Report
+. Navigate to *Automation Execution* → *Templates*
+. Launch the *Configure Loadbalancer* template
+. When prompted for hostname, provide: `node01.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]`
 
-. Once the template completes, navigate to the *Windows Report* tab
-. Review the outstanding updates that are needed for the system
+.Load Balancer Configuration
+image::/hostname.png[HAProxy Configuration Input]
 
-The report will display all available security updates, including:
-- Update titles and descriptions
-- Knowledge Base (KB) numbers
-- Installation requirements
-- Download sizes
+This will configure HAProxy to include your RHEL server in the load balancing pool.
 
-.Windows Update Report
-image::update-report.png[Windows Update Report Results]
+==== Step 3: Add Windows Server to Load Balancer
+
+. Re-run the *Configure Loadbalancer* template
+. When prompted for hostname, provide: `dbserver.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]`
+
+The load balancer will now distribute traffic between both your Windows and RHEL application servers.
+
+==== Step 4: Test Complete Application Stack
+
+Before final testing:
+
+. Verify each individual application server is responding correctly
+. Check the `webapp-windows` tab for Windows server availability
+. Check the `webapp-rhel` tab for RHEL server availability
+. Navigate to the `loadbalancer` tab to test load-balanced access
+
+The load balancer will now rotate traffic between your two application servers, providing redundancy and distributing the load.
 
 [TIP]
 ====
-You can re-run the template with different update categories to generate focused reports for specific types of patches (Critical Updates, Definition Updates, etc.).
+The environment is now ready for handover to your development teams! They have a fully redundant, load-balanced web application running across hybrid infrastructure.
 ====
-
-=== Exercise 2: Verifying Scheduled Tasks
-
-Let's verify that our previously scheduled backup tasks are running correctly.
-
-==== Step 1: Check Scheduled Job Execution
-
-. Navigate to *Automation Execution* → *Jobs*
-. Observe that your *Server Backup - VSS/Windows* jobs that were scheduled earlier have been running automatically
-
-==== Step 2: Verify VSS Snapshots
-
-. Execute the *Check Windows Backups* template
-. Confirm that VSS snapshots are being created successfully
-
-.VSS Snapshots Verification
-image::vss-snaps.png[VSS Snapshots Status]
-
-This verification confirms that your automated backup strategy is working correctly alongside your new patch reporting capabilities.
 
 == Code Reference
 
-=== Windows Update Report Implementation
+=== HAProxy Load Balancer Configuration
 
-Here's the key Ansible code used for generating Windows patch reports:
+Here's the automation code for configuring HAProxy load balancing:
 
 [source,yaml]
 ----
 tasks:
-  - name: Create site directory structure
-    ansible.windows.win_file:
-      path: "{{ report_path }}"
-      state: directory
+  - name: Resolve DNS server hostname to IP
+    set_fact:
+      host_ip: "{{ lookup('dig', host) }}"
 
-  - name: Show us the updates
-    debug:
-      msg: "{{ update_category }}"
+  - name: Add static hosts to load balancer
+    ansible.builtin.lineinfile:
+      path: /etc/haproxy/haproxy.cfg
+      line: "server static-{{ host}} {{ host_ip }}:80 check"
+      insertafter: '^## STATIC CONFIG ANSIBLE'
+      state: present
 
-  - name: Check available updates
-    ansible.windows.win_updates:
-      category_names:
-       - "{{ update_category | default(omit) }}"
-      state: searched
-    register: update_result
-
-  - name: Generate HTML report
-    ansible.windows.win_template:
-      src: templates/win_patch_report.html.j2
-      dest: C:\inetpub\wwwroot\index.html
-      force: true
-    notify: restart_iis
-    vars:
-      updates: "{{ update_result.updates }}"
+  - name: Add webapp hosts to load balancer
+    ansible.builtin.lineinfile:
+      path: /etc/haproxy/haproxy.cfg
+      line: "server webapp-{{ host }} {{ host_ip }}:80 check"
+      insertafter: '^## APP CONFIG ANSIBLE'
+      state: present
+    notify:
+      - restart haproxy
 
 handlers:
-  - name: restart_iis
-    ansible.windows.win_service:
-      name: W3Svc
+  - name: restart haproxy
+    service:
+      name: haproxy
       state: restarted
-      start_mode: auto
+----
+
+=== RHEL Web Application Deployment
+
+Here's the code for deploying web applications on RHEL systems:
+
+[source,yaml]
+----
+tasks:
+  - name: clone a git repo
+    ansible.builtin.git:
+      repo: https://github.com/nmartins0611/aap25-roadshow-content.git
+      dest: /tmp/repo
+
+  - name: copy all files from one directory to another
+    ansible.builtin.copy:
+      src: /tmp/repo/lab-resources/
+      dest: /var/www/html
+      remote_src: true
+
+  - name: Tag the page
+    ansible.builtin.lineinfile:
+      path: /var/www/html/index.html
+      line: "This is running on the RHEL Host"
+      insertafter: "<p>&copy; 2024 TMM - Where comedy lives. All rights reserved.</p>"
+
+  - name: Start httpd service
+    ansible.builtin.service:
+      name: httpd
+      state: started
 ----
 
 === Key Components Explained
 
-**Update Scanning:**
-- Uses `ansible.windows.win_updates` module in search mode
-- Filters by specified update categories
-- Registers results for report generation
+**DNS Resolution and Discovery:**
+- Uses Ansible's `dig` lookup to resolve hostnames to IP addresses
+- Enables dynamic discovery of application servers
+- Supports both static and dynamic infrastructure configurations
 
-**Report Generation:**
-- Leverages Jinja2 templating for dynamic HTML creation
-- Publishes reports directly to IIS web server
-- Provides accessible, shareable format for stakeholders
+**Configuration Management:**
+- Uses `lineinfile` module for precise configuration file modifications
+- Implements idempotent configuration changes
+- Maintains configuration file structure and comments
 
-**Service Management:**
-- Automatically restarts IIS after report publication
-- Ensures web service availability for report access
+**Service Orchestration:**
+- Coordinates service restarts through handlers
+- Ensures load balancer updates are applied correctly
+- Maintains service availability during configuration changes
+
+**Application Deployment:**
+- Implements GitOps principles with source code repositories
+- Uses platform-specific deployment strategies
+- Maintains application consistency across different platforms
+
+== Architecture Overview
+
+Your completed environment demonstrates several enterprise automation patterns:
+
+**Multi-Tier Architecture:**
+- Load balancer tier (HAProxy)
+- Application tier (IIS and Apache)
+- Infrastructure tier (Windows and RHEL)
+- Identity management tier (Active Directory)
+
+**High Availability Design:**
+- Redundant application servers
+- Load balancing with health checks
+- Cross-platform deployment strategies
+- Automated failover capabilities
+
+**Infrastructure as Code:**
+- Version-controlled automation playbooks
+- Repeatable deployment processes
+- Environment consistency across platforms
+- Automated configuration management
 
 == Key Takeaways
 
-Congratulations! You've successfully automated multiple critical IT operations tasks:
+You've successfully completed a comprehensive enterprise deployment automation:
 
-* ✅ **Automated Backup Operations**: Implemented XFS backups for Linux and VSS snapshots for Windows
-* ✅ **Infrastructure Data Collection**: Gathered comprehensive system facts and generated dynamic reports
-* ✅ **Security Compliance**: Automated OpenSCAP compliance scanning and reporting
-* ✅ **Patch Management**: Created dynamic Windows update reports with configurable survey options
-* ✅ **Scheduled Automation**: Configured recurring tasks that run without manual intervention
+* ✅ **Multi-Platform Deployment**: Deployed applications across Windows and RHEL platforms
+* ✅ **Load Balancing**: Configured HAProxy for high availability and traffic distribution
+* ✅ **Service Discovery**: Implemented dynamic server discovery and configuration
+* ✅ **GitOps Integration**: Used source control for application deployment
+* ✅ **End-to-End Automation**: Orchestrated complete application stack deployment
 
+## Project Completion Summary
+
+Throughout this scenario, you've demonstrated:
+
+**Infrastructure Automation:**
+- Domain controller deployment and configuration
+- Multi-platform server provisioning
+- Network service configuration
+
+**Identity Management:**
+- Active Directory structure creation
+- User and group management
+- Cross-platform domain integration
+
+**Application Deployment:**
+- Web server configuration (IIS and Apache)
+- Application source code deployment
+- Service configuration and startup
+
+**Load Balancing and High Availability:**
+- HAProxy configuration and management
+- Health check implementation
+- Traffic distribution strategies
+
+== Next Steps
+
+With this foundation, consider expanding into these advanced areas:
+
+**DevOps Integration:**
+- Implement CI/CD pipelines with Ansible
+- Create automated testing and validation workflows
+- Develop blue-green deployment strategies
+
+**Monitoring and Observability:**
+- Deploy monitoring solutions (Prometheus, Grafana)
+- Implement log aggregation and analysis
+- Create automated alerting and remediation
+
+**Security and Compliance:**
+- Implement security scanning and remediation
+- Automate compliance reporting
+- Deploy security policies and configurations
+
+**Cloud Integration:**
+- Extend automation to cloud platforms
+- Implement hybrid cloud strategies
+- Automate cloud resource management
+
+**Disaster Recovery:**
+- Create backup and restore automation
+- Implement disaster recovery procedures
+- Test and validate recovery processes
+
+You've now demonstrated how Ansible Automation Platform can transform complex, manual deployment processes into reliable, repeatable automation that delivers enterprise-grade infrastructure and applications efficiently and consistently.
