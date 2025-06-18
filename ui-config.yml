@@ -1,17 +1,17 @@
----
+ng---
 
 antora:
   name: modules
   dir: www
   modules:
     - name: module-01
-      label: "Backup and Snapshots"
+      label: "Setting up the foundation"
       solveButton: false
     - name: module-02
-      label: "Infrastructure Reporting"
+      label: "Domains for the multidomain"
       solveButton: false
     - name: module-03
-      label: "Windows Reporting"
+      label: "Deploy the WebApps!"
       solveButton: false
 
 tabs:
