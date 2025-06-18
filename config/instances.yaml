@@ -151,41 +151,8 @@ virtualmachines:
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
-
-  - name: "node02"
-    image: "rhel-8.7"
-    memory: "2G"
-    cores: 2
-    image_size: "30Gi"
-    tags:
-      - key: "AnsibleGroup"
-        value: "isolated"
-    networks:
-      - default
-    services:
-      - name: node02-http
-        ports:
-          - port: 80
-            protocol: TCP
-            targetPort: 80
-            name: node02
-    routes:
-      - name: node02-web
-        host: node02
-        service: node02-http
-        targetPort: 80
-        tls: true  ## To resolve https/http Framing
-        tls_termination: Edge ## To resolve https/http Framing
-    userdata: |-
-      #cloud-config
-      user: rhel
-      password: ansible123!
-      chpasswd: { expire: False }
-      runcmd:
-        - sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
-        - systemctl reload sshd
         
-  - name: "node03"
+  - name: "haproxy"
     image: "rhel-9.5"
     memory: "2G"
     cores: 2
@@ -196,16 +163,16 @@ virtualmachines:
     networks:
       - default
     services:
-      - name: node03-http
+      - name: haproxy-http
         ports:
           - port: 80
             protocol: TCP
             targetPort: 80
-            name: node03
+            name: haproxy
     routes:
-      - name: node03-web
-        host: node03
-        service: node03-http
+      - name: haproxy-web
+        host: haproxy
+        service: haproxy-http
         targetPort: 80
         tls: true
         tls_termination: Edge
@@ -252,6 +219,45 @@ virtualmachines:
     routes:
       - name: windows
         host: windows
+        service: iis
+        targetPort: 80
+        tls: true
+        tls_termination: Edge
+
+  - name: "dbserver"
+    image: "base-zero-windows-2025-3"
+    memory: "16G"
+    cores: 4
+    image_size: "30Gi"
+    tags:
+      - key: "AnsibleGroup"
+        value: "isolated"
+    interface_model: "e1000e"
+    networks:
+      - default
+    services:
+      - name: dbserver
+        ports:
+          - port: 5986
+            protocol: TCP
+            targetPort: 5986
+            name: dbserver
+            
+      - name: windows-rdp
+        ports:
+          - port: 3389
+            protocol: TCP
+            targetPort: 3389
+            name: windows-rdp
+      - name: iis
+        ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+            name: iis
+    routes:
+      - name: dbserver
+        host: dbserver
         service: iis
         targetPort: 80
         tls: true
