@@ -1,253 +1,252 @@
-= Infrastructure Data Gathering with Ansible
+= Active Directory Domain Management with Ansible
 :toc:
 :toc-placement: auto
 
-== Introduction
+== Scenario 02: Standardized Consistency (Continued)
 
-Gathering comprehensive data about your infrastructure is one of the best starting points for automation with Ansible. While you know you have servers and networks, auditing and collecting all system data can be a massive undertaking. Fortunately, Ansible excels at this task and can scale to handle infrastructure of any size.
+=== Introduction
 
-This lab will guide you through using Ansible to collect system information, generate reports, and perform compliance audits across your infrastructure.
+Excellent work on the initial deployment! However, as often happens in IT operations, requirements have evolved. You've received an updated ticket that builds upon your existing infrastructure.
+
+.Updated Support Ticket #003
+image::/ticket03.png[Support Ticket Update]
+
+Now that you have a functioning domain, Windows systems, and a new RHEL system deployed, it's time to complete the environment setup by managing user accounts, organizational units, and domain membership across your hybrid infrastructure.
 
 === Lab Environment Setup
 
-==== Access Credentials
-
-[cols="1,1"]
-|===
-| Username | Password
-
-| admin
-| ansible123!
-|===
-
+Your DNS domain for this lab is: *[[ Instruqt-Var key="DOMAIN" hostname="control" ]]*
 
 == Lab Exercises
 
-=== Exercise 1: Gathering Server Information
+=== Exercise 1: Creating Organizational Units and User Accounts
 
-Let's start by collecting detailed system facts from individual servers using Ansible's built-in capabilities.
+Active Directory requires proper organizational structure to manage users and resources effectively. You'll create the necessary organizational units and groups for your development teams.
 
-==== Step 1: Access the Inventory
+==== Step 1: Deploy Active Directory Structure
 
-. Navigate to your lab `aap` tab and login using the credentials above
-. Navigate to *Automation Execution* → *Infrastructure* → *Inventories*
-. Select the *Video Platform Inventory*
-. Click on the *Hosts* tab
-
-This inventory contains the systems we'll be automating. You should see several hosts already configured for you.
-
-.Node Setup View
-image::node01-setup.png[Node Setup Interface]
-
-==== Step 2: Run Ad-hoc Commands
-
-We'll use Ansible Automation Platform's ad-hoc command feature to gather system facts:
-
-. Select the host `node01`
-. Click on *Run command*
-. From the module dropdown list, select the *Setup* module
-. Click *Next*
-
-.Setup Module Selection
-image::setup.png[Setup Module Interface]
-
-==== Step 3: Configure Execution Environment
-
-. Select the *Default execution environment* from the dropdown
-. Click *Next*
-
-==== Step 4: Choose Credentials
-
-. Select the *Application Nodes* credential
-. Click *Next*
-. Click *Finish* to execute the command
-
-==== Step 5: Review System Facts
-
-Once the command executes, you'll see comprehensive system facts displayed. This includes all the information Ansible can automatically gather from the target system.
-
-.System Facts Output
-image::setup-output.png[Setup Output Results]
+. Navigate to *Automation Execution* → *Templates*
+. Launch the *Windows Users and OU* template
 
 [NOTE]
 ====
-The Setup module collects extensive system information including hardware details, network configuration, installed packages, and operating system specifics. This data forms the foundation for infrastructure automation and reporting.
+This template may appear on page 2 of your template list, depending on your screen resolution.
 ====
 
-=== Exercise 2: Generating Infrastructure Reports at Scale
+==== Step 2: Configure Organizational Details
 
-Now let's leverage Ansible's templating capabilities to create dynamic reports based on collected facts and task results.
+When prompted, provide the following configuration details:
 
-==== Understanding Infrastructure Awareness
+* *OU:* `Testing`
+* *Group:* `TMM-Dev`
 
-Infrastructure awareness is crucial for effective IT operations. Ansible makes this easy by combining fact collection with Jinja templating to generate comprehensive, dynamic reports.
+. Click *Next* and *Finish* to start the job
 
-==== Step 1: Generate Application Server Report
+The automation will create the organizational structure and populate it with the necessary user accounts and groups for your development environment.
+
+==== Step 3: Verify Active Directory Configuration
+
+Once the job completes, verify the configuration on your domain controller:
+
+. Navigate to the `windows` tab
+. Click the *Start/Windows* button
+. Select *Windows Administrative Tools* → *Active Directory Users and Computers*
+. Expand the domain structure
+
+Confirm that the following have been successfully created:
+- Testing OU (Organizational Unit)
+- TMM-Dev group
+- Developer user accounts
+
+.Active Directory Structure
+image::/accounts.png[Active Directory Accounts and OUs]
+
+=== Exercise 2: Domain Membership Management
+
+With your Active Directory structure in place, you need to join both Windows and Linux systems to the domain for centralized management and authentication.
+
+==== Windows Server Domain Join
+
+===== Step 1: Join Windows Server to Domain
+
+. Navigate back to your `aap` tab
+. Go to *Automation Execution* → *Templates*
+. Launch the *Windows Join Domain* template
+
+===== Step 2: Verify Windows Domain Membership
+
+. Navigate to the `windows` tab
+. Click *Start/Windows* → *Windows Administrative Tools* → *Active Directory Users and Computers*
+
+You should see your Windows server listed in the domain structure.
+
+.Windows Server Domain Join
+image::/serverjoined01.png[Windows Server Domain Membership]
+
+==== RHEL Server Domain Join
+
+===== Step 1: Configure Survey for Domain Input
+
+Your RHEL systems also need domain membership, but first you need to create a flexible survey to specify domain information:
 
 . Navigate to *Automation Execution* → *Templates*
-. Execute the *Application Server Report* template
-. When prompted with options, click *All*
+. Select the *RHEL Join AD* template
+. Click on the *Survey* tab
 
-This template will collect information from all your application servers and generate a comprehensive report.
+.Survey Configuration Interface
+image::/addsurvey.png[Survey Addition Interface]
 
-==== Step 2: View the Generated Report
+===== Step 2: Create Domain Survey Question
 
-. Once the template execution completes, navigate to the *Report Server* tab
-. Refresh the page to see the newly generated report
+. Click *Create survey question*
+. Configure the survey with the following details:
 
-.Server Report Overview
-image::srv-report.png[Server Report Dashboard]
+**Survey Configuration:**
+* *Question:* `Please provide the domain to join`
+* *Description:* `Domain/Forest information`
+* *Answer variable name:* `domain`
 
-Notice that the report includes backup information alongside system details, providing a holistic view of your infrastructure status.
+. Click *Create survey question*
+. Enable the survey using the toggle
 
-.Backup Data Integration
-image::backup-data.png[Backup Report Section]
+.Survey Enablement
+image::/enablesurvey.png[Survey Enable Toggle]
+
+===== Step 3: Execute RHEL Domain Join
+
+. Launch the template
+. When prompted, provide your DNS domain information: *[[ Instruqt-Var key="DOMAIN" hostname="control" ]]*
+
+.Domain Join Configuration
+image::/joindomain.png[RHEL Domain Join Input]
+
+. Click *Next* to proceed
+
+===== Step 4: Verify Complete Domain Integration
+
+After both Windows and RHEL domain joins complete:
+
+. Navigate to the `windows` tab
+. Open *Start/Windows* → *Windows Administrative Tools* → *Active Directory Users and Computers*
+. Verify that both systems appear in the domain
+
+.Complete Domain Verification
+image::/verify.png[Domain Membership Verification]
 
 [TIP]
 ====
-You can re-run the report template and select different options to create targeted reports for specific criteria or server subsets.
+Having both Windows and RHEL systems in the same domain enables centralized authentication, policy management, and simplified administration across your hybrid infrastructure.
 ====
-
-=== Exercise 3: Compliance Reporting with OpenSCAP
-
-Security compliance is a critical requirement for most organizations. Let's generate a compliance report using OpenSCAP integration.
-
-==== Background: Why Compliance Reports Matter
-
-Information Security teams require regular compliance reports to ensure systems meet organizational and regulatory requirements. Ansible can automate OpenSCAP scans to provide these reports consistently and at scale.
-
-==== Step 1: Generate Compliance Report
-
-Security has specifically requested a compliance report for `Node02`. Let's fulfill this request:
-
-. Navigate to *Automation Execution* → *Templates*
-. Execute the *OpenSCAP Report* template
-
-==== Step 2: Access Compliance Results
-
-. Once the job completes, navigate to the *Compliance Report* tab
-. You'll see the generated compliance report files
-
-.Compliance Report Directory
-image::compliance_report_folder.png[Compliance Report Folder]
-
-==== Step 3: Review Detailed Results
-
-Click on the report file to view the detailed compliance results, including:
-
-- Security control assessments
-- Pass/fail status for each check
-- Remediation recommendations
-- Risk severity levels
-
-.Detailed Compliance Report
-image::compliance_report.png[Compliance Report Details]
 
 == Code Reference
 
-=== OpenSCAP Automation Implementation
+=== Active Directory User and Group Management
 
-Here's the key Ansible code used for automated compliance reporting:
+Here's the automation code for creating organizational units, groups, and users:
 
 [source,yaml]
 ----
 tasks:
-  - name: Check if the system is RHEL 8
-    ansible.builtin.debug:
-      msg: "This playbook is not compatible with {{ inventory_hostname }} (not RHEL 8)"
-    when: ansible_distribution != "RedHat" or ansible_distribution_major_version != "8"
-    failed_when: false
+  - name: Create a group in an OU
+    microsoft.ad.group:
+      identity: "{{ group_name }}"
+      scope: global
+      path: "{{ ou_path }}"
+      state: present
 
-  - name: Run compliance tasks on RHEL 8 systems only
-    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "8"
-    block:
-      - name: Get our facts straight
-        ansible.builtin.set_fact:
-          _profile: '{{ compliance_profile | replace("pci_dss", "pci-dss") }}'
-          _report_dir: /tmp/oscap-reports
+  - name: Create users for lab
+    microsoft.ad.user:
+      identity: "{{ item.key }}"
+      password: "{{ user_password }}"
+      firstname: "{{ item.value.firstname }}"
+      surname: "{{ item.value.surname }}"
+      state: present
+      groups:
+        set:
+          - "{{ group_name }}"
+          - Domain Users
+    loop: "{{ users_list | dict2items }}"
 
-      - name: Ensure OpenSCAP tools are installed
-        ansible.builtin.dnf:
-          name: '{{ openscap_packages }}'
-          state: present
-
-      - name: Configure httpd
-        when: use_httpd | bool
-        block:
-          - name: Install httpd
-            ansible.builtin.dnf:
-              name: httpd
-              state: present
-            notify: Restart httpd
-
-          - name: Override report directory
-            ansible.builtin.set_fact:
-              _report_dir: /var/www/html/oscap-reports
-
-          - name: Gather service facts
-            ansible.builtin.service_facts:
-
-          - name: Enable firewall http service
-            ansible.posix.firewalld:
-              service: http
-              state: enabled
-              immediate: true
-              permanent: true
-            when: "'firewalld.service' in ansible_facts.services"
-
-          - name: Disable httpd welcome page
-            ansible.builtin.file:
-              path: /etc/httpd/conf.d/welcome.conf
-              state: absent
-            notify: Restart httpd
-
-      - name: Create report on Report Server
-        block:
-          - name: Ensure report directory exists
-            ansible.builtin.file:
-              path: '{{ _report_dir }}/{{ _profile }}'
-              state: directory
-              owner: root
-              group: root
-              mode: 0755
-
-          - name: Set report name
-            ansible.builtin.set_fact:
-              _report: '{{ _report_dir }}/{{ _profile }}/report-{{ inventory_hostname }}-{{ ansible_date_time.iso8601 }}.html'
-
-          - name: Generate compliance report
-            ansible.builtin.command: >-
-              oscap xccdf eval --profile {{ _profile }} --report {{ _report }}
-              /usr/share/xml/scap/ssg/content/ssg-rhel{{ ansible_distribution_major_version }}-ds.xml
-            args:
-              creates: '{{ _report }}'
-            register: _oscap
-            failed_when: _oscap.rc not in [0, 2]
-
-          - name: Set report permissions
-            ansible.builtin.file:
-              path: '{{ _report }}'
-              owner: root
-              group: root
-              mode: 0644
+  - name: Create Ansible Admin
+    microsoft.ad.user:
+      identity: "{{ admin_user }}"
+      password: "{{ admin_password }}"
+      firstname: "Ansible AD"
+      surname: "Administrator"
+      state: present
+      groups:
+        set:
+          - Domain Admins
+          - Domain Users
 ----
+
+=== Domain Membership Management
+
+Here's the code for joining servers to the Active Directory domain:
+
+[source,yaml]
+----
+tasks:
+  - name: Join host to Domain
+    microsoft.ad.membership:
+      dns_domain_name: "{{ wins_domain }}"
+      hostname: "{{ inventory_hostname }}"
+      domain_admin_user: Administrator
+      domain_admin_password: "{{ safe_password }}"
+      domain_server: "{{ hostname_cleaned }}"
+      state: domain
+      reboot: true
+----
+
+=== Key Components Explained
+
+**Organizational Structure Management:**
+- Creates hierarchical OU structure for logical organization
+- Establishes security groups with appropriate scope
+- Automates user account creation with group membership
+
+**Domain Integration:**
+- Handles both Windows and Linux domain membership
+- Manages authentication credentials securely
+- Implements automatic system reboots when required
+
+**Cross-Platform Compatibility:**
+- Uses microsoft.ad collection for Windows integration
+- Supports hybrid environments with unified domain management
+- Maintains consistent security policies across platforms
 
 == Key Takeaways
 
-You've successfully completed the infrastructure data gathering exercises! You now understand how to:
+You've successfully completed advanced Active Directory automation:
 
-* ✅ **Collect System Facts**: Use Ansible's Setup module to gather comprehensive system information
-* ✅ **Generate Dynamic Reports**: Leverage Jinja templating to create infrastructure reports at scale  
-* ✅ **Automate Compliance Audits**: Implement OpenSCAP integration for security compliance reporting
-* ✅ **Scale Data Collection**: Apply these techniques across multiple systems simultaneously
+* ✅ **Organizational Structure**: Created OUs and security groups for logical resource management
+* ✅ **User Account Management**: Automated user creation with appropriate group memberships
+* ✅ **Hybrid Domain Integration**: Joined both Windows and Linux systems to centralized domain
+* ✅ **Survey-Driven Automation**: Implemented dynamic input collection for flexible deployments
+* ✅ **Security Best Practices**: Maintained secure credential handling throughout the process
 
 == Next Steps
 
-With these foundational skills in infrastructure data gathering, you're ready to:
+With your hybrid domain environment fully automated, consider these advanced scenarios:
 
-- Implement regular automated reporting schedules
-- Expand compliance scanning to additional security frameworks
-- Create custom reports tailored to your organization's specific needs
-- Build more complex automation workflows using the collected system data
+**Identity and Access Management:**
+- Implement automated user lifecycle management
+- Create role-based access control (RBAC) workflows
+- Develop group policy automation for compliance
 
-This infrastructure awareness foundation will serve as the basis for more advanced automation scenarios throughout your Ansible journey.
+**Infrastructure Scaling:**
+- Build automated domain controller replication
+- Implement site-based Active Directory management
+- Create disaster recovery procedures for domain services
+
+**Integration Opportunities:**
+- Connect with cloud identity providers (Azure AD, AWS Directory Service)
+- Implement single sign-on (SSO) across applications
+- Automate certificate management for domain services
+
+**Operational Excellence:**
+- Develop monitoring and alerting for domain health
+- Create automated backup and restore procedures
+- Implement compliance reporting for domain policies
+
+You've now demonstrated how Ansible can manage complex, enterprise-grade Active Directory environments while maintaining security, consistency, and operational efficiency across hybrid infrastructure platforms.
