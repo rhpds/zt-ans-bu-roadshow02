@@ -189,7 +189,7 @@ virtualmachines:
     image: "base-zero-windows-2025-3"
     memory: "16G"
     cores: 4
-    image_size: "30Gi"
+    image_size: "40Gi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
@@ -228,7 +228,7 @@ virtualmachines:
     image: "base-zero-windows-2025-3"
     memory: "16G"
     cores: 4
-    image_size: "30Gi"
+    image_size: "40Gi"
     tags:
       - key: "AnsibleGroup"
         value: "isolated"
