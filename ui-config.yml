@@ -33,3 +33,6 @@ tabs:
   - name: loadbalancer
     url: https://haproxy-${guid}.${domain}/
     external: false
+  - name: gitea
+    url: https://gitea-${guid}.${domain}/
+    external: false
