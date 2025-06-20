@@ -243,12 +243,12 @@ virtualmachines:
             targetPort: 5986
             name: dbserver
             
-      - name: windows-rdp
+      - name: dbserver-rdp
         ports:
           - port: 3389
             protocol: TCP
             targetPort: 3389
-            name: windows-rdp
+            name: dbserver-rdp
       - name: iis
         ports:
           - port: 80
