@@ -224,41 +224,41 @@ virtualmachines:
         tls: true
         tls_termination: Edge
 
-  - name: "dbserver"
-    image: "base-zero-windows-2019"
-    memory: "16G"
-    cores: 4
-    image_size: "40Gi"
-    tags:
-      - key: "AnsibleGroup"
-        value: "isolated"
-    interface_model: "e1000e"
-    networks:
-      - default
-    services:
-      - name: dbserver
-        ports:
-          - port: 5986
-            protocol: TCP
-            targetPort: 5986
-            name: dbserver
+  # - name: "dbserver"
+  #   image: "base-zero-windows-2019"
+  #   memory: "16G"
+  #   cores: 4
+  #   image_size: "40Gi"
+  #   tags:
+  #     - key: "AnsibleGroup"
+  #       value: "isolated"
+  #   interface_model: "e1000e"
+  #   networks:
+  #     - default
+  #   services:
+  #     - name: dbserver
+  #       ports:
+  #         - port: 5986
+  #           protocol: TCP
+  #           targetPort: 5986
+  #           name: dbserver
             
-      - name: dbserver-rdp
-        ports:
-          - port: 3389
-            protocol: TCP
-            targetPort: 3389
-            name: dbserver-rdp
-      - name: iis
-        ports:
-          - port: 80
-            protocol: TCP
-            targetPort: 80
-            name: iis
-    routes:
-      - name: dbserver
-        host: dbserver
-        service: iis
-        targetPort: 80
-        tls: true
-        tls_termination: Edge
+  #     - name: dbserver-rdp
+  #       ports:
+  #         - port: 3389
+  #           protocol: TCP
+  #           targetPort: 3389
+  #           name: dbserver-rdp
+  #     - name: iis
+  #       ports:
+  #         - port: 80
+  #           protocol: TCP
+  #           targetPort: 80
+  #           name: iis
+  #   routes:
+  #     - name: dbserver
+  #       host: dbserver
+  #       service: iis
+  #       targetPort: 80
+  #       tls: true
+  #       tls_termination: Edge
