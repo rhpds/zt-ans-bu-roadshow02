@@ -85,16 +85,20 @@ virtualmachines:
         - sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
         - systemctl reload sshd
     services:
-      - name: control-https
+      - name: control
         ports:
           - port: 443
             protocol: TCP
             targetPort: 443
             name: control-https
+          - port: 22
+            protocol: TCP
+            targetPort: 22
+            name: control-ssh
     routes:
       - name: control-https
         host: control
-        service: control-https
+        service: control
         targetPort: 443
         tls: true
         tls_termination: reencrypt
