@@ -1,6 +1,6 @@
 #!/bin/bash
 su rhel -c 'ssh-keygen -f /home/rhel/.ssh/id_rsa -q -N ""'
-
+echo "10.0.2.2 control.lab control" >> /etc/hosts
 # # ## setup rhel user
 # touch /etc/sudoers.d/rhel_sudoers
 # echo "%rhel ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/rhel_sudoers
