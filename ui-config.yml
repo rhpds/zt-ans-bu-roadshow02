@@ -15,14 +15,13 @@ antora:
       solveButton: false
 
 tabs:
+  - name: ">_ control"
+    url: /wetty
   - name: aap
     url: https://control-${guid}.${domain}/
     external: false
   - name: Domain Controller
     url: https://windows-ironrdp-${guid}.${domain}/
-    external: false
-  - name: Database Server
-    url: https://dbserver-ironrdp-${guid}.${domain}/
     external: false
   - name: Webapp-windows
     url: https://dbserver-${guid}.${domain}/
