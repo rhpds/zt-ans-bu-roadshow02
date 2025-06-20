@@ -1,6 +1,61 @@
 ---
 # Containers are under development
 containers:
+  - name: ironrdp1
+    image: quay.io/agonzalezrh/ironrdp:v0.0.2
+    ports:
+      - name: ironrdp
+        containerPort: 9000
+        protocol: TCP
+      - containerPort: 8081
+        protocol: TCP
+      - containerPort: 7171
+        protocol: TCP
+    environment:
+      RDPSERVER: windows
+      RDPUSER: Administrator
+      RDPPASSWORD: Ansible123!
+      JETSERVER: https://windows-jetrdp-{{ guid }}.{{ sandbox_openshift_apps_domain }}/jet/rdp
+      TOKENGENSERVER: https://windows-tokengen-{{ guid }}.{{ sandbox_openshift_apps_domain }}
+    memory: 2Gi
+    services:
+      - name: ironrdp
+        ports:
+          - port: 9000
+            protocol: TCP
+            targetPort: 9000
+            name: ironrdp
+      - name: tokengen
+        ports:
+          - port: 8081
+            protocol: TCP
+            targetPort: 8081
+            name: tokengen
+      - name: jetrdp
+        ports:
+          - port: 7171  
+            protocol: TCP
+            targetPort: 7171
+            name: jetrdp
+    routes:
+      - name: ironrdp1
+        host: windows-ironrdp
+        service: ironrdp
+        targetPort: 9000
+        tls: true
+        tls_termination: Edge
+      - name: tokengen1
+        host: tokengen-ironrdp
+        service: tokengen
+        targetPort: 8081
+        tls: true
+        tls_termination: Edge
+      - name: jetrdp1
+        host: jetrdp-ironrdp
+        service: jetrdp
+        targetPort: 7171
+        tls: true
+        tls_termination: Edge
   - name: gitea
     image: gitea/gitea:1.16.8-rootless
     ports:
