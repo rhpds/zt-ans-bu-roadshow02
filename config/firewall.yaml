@@ -22,6 +22,8 @@ ingress:
     port: 138
   - protocol: TCP
     port: 139
+  - protocol: UDP
+    port: 53
 egress:
 - ports:
   - protocol: TCP
@@ -44,3 +46,5 @@ egress:
     port: 138
   - protocol: TCP
     port: 139
+  - protocol: UDP
+    port: 53
