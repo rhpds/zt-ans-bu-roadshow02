@@ -76,6 +76,7 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+      - secondary
     userdata: |-
       #cloud-config
       user: rhel
@@ -84,6 +85,16 @@ virtualmachines:
       runcmd:
         - sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
         - systemctl reload sshd
+    networkdata: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp4: yes
+          eth1:
+            dhcp4: no
+            addresses:
+              - 192.168.1.10/32
     services:
       - name: control
         ports:
