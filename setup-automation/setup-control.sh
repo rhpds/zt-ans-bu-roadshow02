@@ -2,7 +2,7 @@
 su rhel -c 'ssh-keygen -f /home/rhel/.ssh/id_rsa -q -N ""'
 
 # Get external IP for control-${GUID}.${DOMAIN}
-IP=$(getent control-${GUID}.${DOMAIN} | cut -d" " -f1)
+IP=$(dig +short control-${GUID}.${DOMAIN})
 echo "$IP control.lab control" >> /etc/hosts
 # # ## setup rhel user
 # touch /etc/sudoers.d/rhel_sudoers
