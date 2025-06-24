@@ -255,7 +255,7 @@ image::/invafter.png[Inventory After Deployment]
 
 Here's the automation code for installing standardized Windows applications:
 
-[source,text,console]
+[source,asciidoc]
 ----
 IGNOREME
 ----
