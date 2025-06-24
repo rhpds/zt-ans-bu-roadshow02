@@ -148,6 +148,7 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+      - secondary
     userdata: |-
       #cloud-config
       user: rhel
@@ -167,6 +168,7 @@ virtualmachines:
         value: "isolated"
     networks:
       - default
+      - secondary
     services:
       - name: haproxy-http
         ports:
@@ -201,6 +203,7 @@ virtualmachines:
     interface_model: "e1000e"
     networks:
       - default
+      - secondary
     services:
       - name: windows
         ports:
@@ -240,6 +243,7 @@ virtualmachines:
     interface_model: "e1000e"
     networks:
       - default
+      - secondary
     services:
       - name: dbserver
         ports:
