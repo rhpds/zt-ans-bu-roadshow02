@@ -4,10 +4,6 @@ nmcli connection add type ethernet con-name enp2s0 ifname enp2s0 ipv4.addresses 
 nmcli connection up enp2s0
 echo "192.168.1.10 control.lab control" >> /etc/hosts
 
-echo "192.168.1.11 node01.lab node01" >> /etc/hosts
-
-echo "192.168.1.100 windows.lab windows" >> /etc/hosts
-echo "192.168.1.101 dbserver.lab dbserver" >> /etc/hosts
 
 # # ## setup rhel user
 # touch /etc/sudoers.d/rhel_sudoers
