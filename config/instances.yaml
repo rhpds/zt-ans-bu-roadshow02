@@ -229,7 +229,7 @@ virtualmachines:
         tls_termination: Edge
 
   - name: "dbserver"
-    image: "base-zero-windows-2025-db.qcow2" 
+    image: "base-zero-windows-2025-1-db.qcow2" 
     memory: "16G"
     cores: 4
     image_size: "65Gi"
