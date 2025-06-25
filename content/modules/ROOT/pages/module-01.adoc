@@ -255,6 +255,11 @@ image::/invafter.png[Inventory After Deployment]
 
 Here's the automation code for installing standardized Windows applications:
 
+[source,asciidoc]
+----
+IGNOREME
+----
+
 [source,yaml]
 ----
 tasks:

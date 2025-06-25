@@ -1,4 +1,16 @@
 #!/bin/bash
+
+nmcli connection add type ethernet con-name enp2s0 ifname enp2s0 ipv4.addresses 192.168.1.11/24 ipv4.method manual connection.autoconnect yes
+nmcli connection up enp2s0
+
+echo "192.168.1.10 control.lab control" >> /etc/hosts
+
+echo "192.168.1.11 node01.lab node01" >> /etc/hosts
+
+echo "192.168.1.100 windows.lab windows" >> /etc/hosts
+echo "192.168.1.101 dbserver.lab dbserver" >> /etc/hosts
+
+
 curl -k  -L https://${SATELLITE_URL}/pub/katello-server-ca.crt -o /etc/pki/ca-trust/source/anchors/${SATELLITE_URL}.ca.crt
 update-ca-trust
 rpm -Uhv https://${SATELLITE_URL}/pub/katello-ca-consumer-latest.noarch.rpm
