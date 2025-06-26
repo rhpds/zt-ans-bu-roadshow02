@@ -27,11 +27,8 @@ tabs:
     url: https://dbserver-${guid}.${domain}/
     external: false
   - name: Webapp-rhel
-    url: https://node01-${guid}.${domain}/
+    url: https://node01-${guid}.${domain}/index.html
     external: false
   - name: loadbalancer
     url: https://haproxy-${guid}.${domain}/
-    external: false
-  - name: gitea
-    url: https://gitea-${guid}.${domain}/
     external: false
