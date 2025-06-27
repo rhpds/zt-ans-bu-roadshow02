@@ -157,6 +157,20 @@ virtualmachines:
       runcmd:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
+    services:
+      - name: node01-http
+        ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+            name: node01
+    routes:
+      - name: node01-web
+        host: node01
+        service: node01-http
+        targetPort: 80
+        tls: true
+        tls_termination: Edge
         
   - name: "haproxy"
     image: "rhel-9.5"
