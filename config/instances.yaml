@@ -209,7 +209,7 @@ virtualmachines:
   - name: "windows"
     image: "base-zero-windows-2025.qcow2"
     memory: "32G"
-    cores: 32
+    cores: 4
     image_size: "65Gi"
     tags:
       - key: "AnsibleGroup"
