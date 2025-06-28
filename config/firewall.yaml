@@ -25,6 +25,7 @@ ingress:
   - protocol: UDP
     port: 53
 egress:
+- {}
 - ports:
   - protocol: TCP
     port: 443
