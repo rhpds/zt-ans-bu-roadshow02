@@ -1,138 +1,170 @@
-= Web Application Deployment and Load Balancing with Ansible
-:toc:
-:toc-placement: auto
+# Web Application Deployment and Load Balancing with Ansible
+*Lab Guide - Scenario 02: Standardized Consistency (Final Phase)*
 
-== Scenario 02: Standardized Consistency (Final Phase)
+---
 
-=== Introduction
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Lab Environment Setup](#lab-environment-setup)
+3. [Exercise 1: Multi-Platform Web Application Deployment](#exercise-1-multi-platform-web-application-deployment)
+4. [Exercise 2: Load Balancer Configuration](#exercise-2-load-balancer-configuration)
+5. [Code Reference](#code-reference)
+6. [Architecture Overview](#architecture-overview)
+7. [Key Takeaways](#key-takeaways)
+8. [Project Completion Summary](#project-completion-summary)
+9. [Next Steps](#next-steps)
+
+---
+
+## Introduction
 
 Excellent progress! You've reached the final phase of your environment deployment. With your infrastructure, domain services, and user accounts configured, it's time to deploy the actual application that will serve your development teams.
 
-.Final Support Ticket #004
-image::/ticket04.png[Support Ticket 004 - Application Deployment]
+[role="border"]
+image::ticket04.png[Final Support Ticket #004 - Application Deployment]
 
 This exercise demonstrates how Ansible can orchestrate complex, multi-tier application deployments across hybrid infrastructure while ensuring high availability through load balancing.
 
-=== Lab Environment Setup
+### Learning Objectives
 
-Your DNS domain for this lab is: *[[ Instruqt-Var key="DOMAIN" hostname="control" ]]*
+By the end of this lab, you will be able to:
 
-== Lab Exercises
+* **Deploy web applications** across both Windows and RHEL platforms using platform-specific configurations
+* **Configure load balancing** with HAProxy for high availability and traffic distribution
+* **Implement service discovery** and dynamic server configuration
+* **Orchestrate complete application stacks** from infrastructure to application deployment
 
-=== Exercise 1: Multi-Platform Web Application Deployment
+---
+
+## Lab Environment Setup
+
+Your DNS domain for this lab is: **[[ Instruqt-Var key="DOMAIN" hostname="control" ]]**
+
+[NOTE]
+====
+This lab represents the final phase of your environment deployment, building upon all previously configured infrastructure including domain services, user accounts, and server deployments.
+====
+
+---
+
+## Exercise 1: Multi-Platform Web Application Deployment
 
 You'll deploy the same web application across both Windows and RHEL platforms, demonstrating Ansible's ability to manage heterogeneous environments with consistent results.
 
-==== Step 1: Deploy Windows Web Application
+### **Step 1: Deploy Windows Web Application**
 
 First, let's deploy the web application on your Windows server using IIS:
 
-. Navigate to your `aap` tab and login
-. Go to *Automation Execution* → *Templates*
-. Launch the *Windows Deploy WebApp* template
+1. **Navigate to your AAP tab** and login
+2. **Go to Automation Execution → Templates**
+3. **Launch the Windows Deploy WebApp template**
 
-This automation will:
-- Configure IIS web server on Windows
-- Deploy application files and dependencies
-- Configure proper security and access permissions
-- Start necessary Windows services
+**This automation will:**
+* **Configure IIS web server** on Windows
+* **Deploy application files** and dependencies
+* **Configure proper security** and access permissions
+* **Start necessary Windows services**
 
-==== Step 2: Verify Windows Deployment
+### **Step 2: Verify Windows Deployment**
 
 Once the template completes:
 
-. Navigate to the `webapp-windows` tab
-. View the deployed web application
+1. **Navigate to the webapp-windows tab**
+2. **View the deployed web application**
 
-.Windows Web Application
-image::/win-webapp.png[Windows Web Application Interface]
+[role="border"]
+image::win-webapp.png[Windows Web Application Interface]
 
-The application should be running successfully on IIS with proper Windows-specific configuration.
+**The application should be running successfully** on IIS with proper Windows-specific configuration.
 
-==== Step 3: Deploy RHEL Web Application
+### **Step 3: Deploy RHEL Web Application**
 
 Now deploy the same application on your RHEL server using Apache:
 
-. Navigate to *Automation Execution* → *Templates*  
-. Launch the *RHEL Deploy WebApp* template
+1. **Navigate to Automation Execution → Templates**
+2. **Launch the RHEL Deploy WebApp template**
 
-This automation will:
-- Configure Apache web server on RHEL
-- Clone application source code from repository
-- Deploy and configure application files
-- Start Apache services with proper configuration
+**This automation will:**
+* **Configure Apache web server** on RHEL
+* **Clone application source code** from repository
+* **Deploy and configure** application files
+* **Start Apache services** with proper configuration
 
-==== Step 4: Verify RHEL Deployment
+### **Step 4: Verify RHEL Deployment**
 
 Once the template completes:
 
-. Navigate to the `webapp-rhel` tab
-. View the deployed web application
+1. **Navigate to the webapp-rhel tab**
+2. **View the deployed web application**
 
-.RHEL Web Application
-image::/rhel-webapp.png[RHEL Web Application Interface]
+[role="border"]
+image::rhel-webapp.png[RHEL Web Application Interface]
 
 [NOTE]
 ====
 Both deployments use the same source application but with platform-specific configurations, demonstrating Ansible's ability to abstract deployment complexity while maintaining consistency.
 ====
 
-=== Exercise 2: Load Balancer Configuration
+---
+
+## Exercise 2: Load Balancer Configuration
 
 With both application servers deployed, you need to configure load balancing to distribute traffic and provide high availability.
 
-==== Step 1: Verify Current Load Balancer State
+### **Step 1: Verify Current Load Balancer State**
 
-. Navigate to the `loadbalancer` tab
-. Refresh the page
+1. **Navigate to the loadbalancer tab**
+2. **Refresh the page**
 
-.Empty Load Balancer
-image::/loadbalancer.png[Load Balancer Before Configuration]
+[role="border"]
+image::loadbalancer.png[Load Balancer Before Configuration]
 
-As expected, there's nothing configured yet - the load balancer needs to be told about your application servers.
+**As expected, there's nothing configured yet** - the load balancer needs to be told about your application servers.
 
-==== Step 2: Configure Load Balancer with RHEL Server
+### **Step 2: Configure Load Balancer with RHEL Server**
 
-. Navigate to *Automation Execution* → *Templates*
-. Launch the *Configure Loadbalancer* template
-. When prompted for hostname, provide: `node01.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]`
+1. **Navigate to Automation Execution → Templates**
+2. **Launch the Configure Loadbalancer template**
+3. **When prompted for hostname, provide:** `node01.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]`
 
-.Load Balancer Configuration
-image::/hostname.png[HAProxy Configuration Input]
+[role="border"]
+image::hostname.png[HAProxy Configuration Input]
 
-This will configure HAProxy to include your RHEL server in the load balancing pool.
+**This will configure HAProxy** to include your RHEL server in the load balancing pool.
 
-==== Step 3: Add Windows Server to Load Balancer
+### **Step 3: Add Windows Server to Load Balancer**
 
-. Re-run the *Configure Loadbalancer* template
-. When prompted for hostname, provide: `dbserver.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]`
+1. **Re-run the Configure Loadbalancer template**
+2. **When prompted for hostname, provide:** `dbserver.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]`
 
-The load balancer will now distribute traffic between both your Windows and RHEL application servers.
+**The load balancer will now distribute traffic** between both your Windows and RHEL application servers.
 
-==== Step 4: Test Complete Application Stack
+### **Step 4: Test Complete Application Stack**
 
 Before final testing:
 
-. Verify each individual application server is responding correctly
-. Check the `webapp-windows` tab for Windows server availability
-. Check the `webapp-rhel` tab for RHEL server availability
-. Navigate to the `loadbalancer` tab to test load-balanced access
+1. **Verify each individual application server** is responding correctly
+2. **Check the webapp-windows tab** for Windows server availability
+3. **Check the webapp-rhel tab** for RHEL server availability
+4. **Navigate to the loadbalancer tab** to test load-balanced access
 
-The load balancer will now rotate traffic between your two application servers, providing redundancy and distributing the load.
+**The load balancer will now rotate traffic** between your two application servers, providing redundancy and distributing the load.
 
 [TIP]
 ====
 The environment is now ready for handover to your development teams! They have a fully redundant, load-balanced web application running across hybrid infrastructure.
 ====
 
-== Code Reference
+---
 
-=== HAProxy Load Balancer Configuration
+## Code Reference
+
+### HAProxy Load Balancer Configuration
 
 Here's the automation code for configuring HAProxy load balancing:
 
-[source,yaml]
-----
+```yaml
 tasks:
   - name: Resolve DNS server hostname to IP
     set_fact:
@@ -159,14 +191,13 @@ handlers:
     service:
       name: haproxy
       state: restarted
-----
+```
 
-=== RHEL Web Application Deployment
+### RHEL Web Application Deployment
 
 Here's the code for deploying web applications on RHEL systems:
 
-[source,yaml]
-----
+```yaml
 tasks:
   - name: clone a git repo
     ansible.builtin.git:
@@ -189,113 +220,4 @@ tasks:
     ansible.builtin.service:
       name: httpd
       state: started
-----
-
-=== Key Components Explained
-
-**DNS Resolution and Discovery:**
-- Uses Ansible's `dig` lookup to resolve hostnames to IP addresses
-- Enables dynamic discovery of application servers
-- Supports both static and dynamic infrastructure configurations
-
-**Configuration Management:**
-- Uses `lineinfile` module for precise configuration file modifications
-- Implements idempotent configuration changes
-- Maintains configuration file structure and comments
-
-**Service Orchestration:**
-- Coordinates service restarts through handlers
-- Ensures load balancer updates are applied correctly
-- Maintains service availability during configuration changes
-
-**Application Deployment:**
-- Implements GitOps principles with source code repositories
-- Uses platform-specific deployment strategies
-- Maintains application consistency across different platforms
-
-== Architecture Overview
-
-Your completed environment demonstrates several enterprise automation patterns:
-
-**Multi-Tier Architecture:**
-- Load balancer tier (HAProxy)
-- Application tier (IIS and Apache)
-- Infrastructure tier (Windows and RHEL)
-- Identity management tier (Active Directory)
-
-**High Availability Design:**
-- Redundant application servers
-- Load balancing with health checks
-- Cross-platform deployment strategies
-- Automated failover capabilities
-
-**Infrastructure as Code:**
-- Version-controlled automation playbooks
-- Repeatable deployment processes
-- Environment consistency across platforms
-- Automated configuration management
-
-== Key Takeaways
-
-You've successfully completed a comprehensive enterprise deployment automation:
-
-* ✅ **Multi-Platform Deployment**: Deployed applications across Windows and RHEL platforms
-* ✅ **Load Balancing**: Configured HAProxy for high availability and traffic distribution
-* ✅ **Service Discovery**: Implemented dynamic server discovery and configuration
-* ✅ **GitOps Integration**: Used source control for application deployment
-* ✅ **End-to-End Automation**: Orchestrated complete application stack deployment
-
-## Project Completion Summary
-
-Throughout this scenario, you've demonstrated:
-
-**Infrastructure Automation:**
-- Domain controller deployment and configuration
-- Multi-platform server provisioning
-- Network service configuration
-
-**Identity Management:**
-- Active Directory structure creation
-- User and group management
-- Cross-platform domain integration
-
-**Application Deployment:**
-- Web server configuration (IIS and Apache)
-- Application source code deployment
-- Service configuration and startup
-
-**Load Balancing and High Availability:**
-- HAProxy configuration and management
-- Health check implementation
-- Traffic distribution strategies
-
-== Next Steps
-
-With this foundation, consider expanding into these advanced areas:
-
-**DevOps Integration:**
-- Implement CI/CD pipelines with Ansible
-- Create automated testing and validation workflows
-- Develop blue-green deployment strategies
-
-**Monitoring and Observability:**
-- Deploy monitoring solutions (Prometheus, Grafana)
-- Implement log aggregation and analysis
-- Create automated alerting and remediation
-
-**Security and Compliance:**
-- Implement security scanning and remediation
-- Automate compliance reporting
-- Deploy security policies and configurations
-
-**Cloud Integration:**
-- Extend automation to cloud platforms
-- Implement hybrid cloud strategies
-- Automate cloud resource management
-
-**Disaster Recovery:**
-- Create backup and restore automation
-- Implement disaster recovery procedures
-- Test and validate recovery processes
-
-You've now demonstrated how Ansible Automation Platform can transform complex, manual deployment processes into reliable, repeatable automation that delivers enterprise-grade infrastructure and applications efficiently and consistently.
+```
