@@ -270,6 +270,8 @@ tee /tmp/setup.yml << EOF
      controller_username: admin
      controller_password: ansible123!
      validate_certs: false
+     variables:
+       ansible_winrm_transport: credssp
 
   - name: Add Windows Inventory Host
     ansible.controller.host:
