@@ -1,20 +1,6 @@
 # Standardized Environment Deployment with Ansible
 *Lab Guide - Scenario 02: Standardized Consistency*
 
----
-
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Lab Environment Setup](#lab-environment-setup)
-3. [Exercise 1: Baseline Configuration and Applications](#exercise-1-baseline-configuration-and-applications)
-4. [Exercise 2: Domain Controller Configuration](#exercise-2-domain-controller-configuration)
-5. [Exercise 3: RHEL Server Deployment](#exercise-3-rhel-server-deployment)
-6. [Code Reference](#code-reference)
-7. [Key Takeaways](#key-takeaways)
-8. [Next Steps](#next-steps)
-
----
 
 ## Introduction
 
