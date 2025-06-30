@@ -1,213 +1,274 @@
-= Standardized Environment Deployment with Ansible
-:toc:
-:toc-placement: auto
+# Standardized Environment Deployment with Ansible
+*Lab Guide - Scenario 02: Standardized Consistency*
 
-== Scenario 02: Standardized Consistency
+---
 
-=== Introduction
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Lab Environment Setup](#lab-environment-setup)
+3. [Exercise 1: Baseline Configuration and Applications](#exercise-1-baseline-configuration-and-applications)
+4. [Exercise 2: Domain Controller Configuration](#exercise-2-domain-controller-configuration)
+5. [Exercise 3: RHEL Server Deployment](#exercise-3-rhel-server-deployment)
+6. [Code Reference](#code-reference)
+7. [Key Takeaways](#key-takeaways)
+8. [Next Steps](#next-steps)
+
+---
+
+## Introduction
 
 Ready to dive into real automation? You've been tasked with configuring a new environment for multiple teams using standardized, consistent deployments. This scenario demonstrates how Ansible Automation Platform enables different technology teams to collaborate effectively by using pre-built playbooks and templates.
 
 By leveraging workflow templates, job templates, and secure credential management, you'll deploy and configure everything consistently across your infrastructure, minimizing manual intervention and ensuring accuracy.
 
-=== Lab Environment Setup
+### Learning Objectives
 
-==== Access Credentials
+By the end of this lab, you will be able to:
 
-[cols="1,1"]
+* **Create and execute workflow templates** that orchestrate multiple job templates
+* **Implement secure credential management** using Ansible Vault
+* **Deploy standardized configurations** across Windows and Linux environments
+* **Manage infrastructure as code** through automated inventory management
+
+---
+
+## Lab Environment Setup
+
+### Access Credentials
+
+[cols="1,1", options="header"]
 |===
-| Username | Password
+|Username |Password
 
-| admin
-| ansible123!
-|===
-
-==== Server Information
-
-Your DNS domain for this lab is: *[[ Instruqt-Var key="DOMAIN" hostname="control" ]]*
-
-[cols="1,1"]
-|===
-| Server | FQDN
-
-| Domain Controller
-| windows.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]
-
-| Dev Windows Server
-| dbserver.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]
+|admin
+|ansible123!
 |===
 
-== Lab Exercises
+### Server Information
 
-=== Exercise 1: Baseline Configuration and Applications
+Your DNS domain for this lab is: **[[ Instruqt-Var key="DOMAIN" hostname="control" ]]**
 
-==== Understanding the Request
+[cols="1,1", options="header"]
+|===
+|Server |FQDN
 
-.Support Ticket #001
-image::/ticket01.png[Support Ticket 001]
+|Domain Controller
+|windows.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]
+
+|Dev Windows Server
+|dbserver.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]
+|===
+
+---
+
+## Exercise 1: Baseline Configuration and Applications
+
+### Understanding the Request
+
+[role="border"]
+image::ticket01.png[Support Ticket 001]
 
 You've received a support ticket requesting configuration updates for two Windows servers in the UAT (User Acceptance Testing) environment. The requirements include:
 
-- Deploy a standard set of applications
-- Apply specific registry changes for environment compliance
-- Disable automatic updates to ensure stability
-- Prevent unintended changes during testing phases
+* **Deploy a standard set of applications**
+* **Apply specific registry changes** for environment compliance
+* **Disable automatic updates** to ensure stability
+* **Prevent unintended changes** during testing phases
 
 To address this request efficiently, you'll create a workflow template that combines multiple job templates into a logical, repeatable process.
 
-==== Step 1: Create a Workflow Template
+### **Step 1: Create a Workflow Template**
 
-. Navigate to *Automation Execution* → *Templates*
-. Click *Create template*
-. Select *Create workflow job template*
+1. **Navigate to Automation Execution → Templates**
+2. **Click Create template**
+3. **Select Create workflow job template**
 
-===== Workflow Configuration:
+**Workflow Configuration:**
 
-* *Name:* `Windows Apps and Settings`
-* *Organization:* `Default`
-* *Description:* `Required Applications and Settings`
-* *Inventory:* `Windows Servers`
+[cols="1,2", options="header"]
+|===
+|Field |Value
 
-. Click *Create workflow template*
+|Name
+|Windows Apps and Settings
 
-This will open the *Workflow Visualizer* where you'll design your automation workflow.
+|Organization
+|Default
 
-==== Step 2: Add the First Workflow Step
+|Description
+|Required Applications and Settings
 
-. In the Workflow Visualizer, click *Add Step*
+|Inventory
+|Windows Servers
+|===
 
-.Workflow Creation Interface
-image:::/workflow_create.png[Workflow Creation]
+4. **Click Create workflow template**
 
-===== First Step Configuration:
+This will open the **Workflow Visualizer** where you'll design your automation workflow.
 
-* *Node Type:* `Job Template`
-* *Job Template:* `Windows Registry keys`
-* *Convergence:* `Any`
+### **Step 2: Add the First Workflow Step**
 
-. Click *Next* and *Finish*
+1. **In the Workflow Visualizer, click Add Step**
 
-==== Step 3: Add the Second Workflow Step
+[role="border"]
+image::workflow_create.png[Workflow Creation Interface]
 
-. Select the `+...+` menu on your first step
-. Click *Add step and link*
+**First Step Configuration:**
 
-.Workflow Step Linking
-image::/sidecarworkflow.png[Workflow Step Configuration]
+[cols="1,2", options="header"]
+|===
+|Field |Value
 
-===== Second Step Configuration:
+|Node Type
+|Job Template
 
-* *Node Type:* `Job Template`
-* *Job Template:* `Windows Server Applications`
-* *Status:* `Always run`
-* *Convergence:* `Any`
+|Job Template
+|Windows Registry keys
 
-. Click *Next* and *Finish*
-. Select *Save* to save the workflow
+|Convergence
+|Any
+|===
 
-==== Step 4: Execute the Workflow
+2. **Click Next and Finish**
 
-. Navigate to *Automation Execution* → *Templates*
-. Select the *Windows Apps and Settings workflow*
-. Click *Launch template*
+### **Step 3: Add the Second Workflow Step**
 
-Monitor the workflow execution in the output. You'll observe how the workflow orchestrates multiple job templates:
+1. **Select the +...+ menu** on your first step
+2. **Click Add step and link**
 
-- First: Windows Registry keys configuration (completes with green checkmark)
-- Then: Windows Server Applications installation (blue spinning arrows while running)
+[role="border"]
+image::sidecarworkflow.png[Workflow Step Configuration]
 
-.Workflow Execution Status
-image::/workflow-action.png[Workflow Running Status]
+**Second Step Configuration:**
+
+[cols="1,2", options="header"]
+|===
+|Field |Value
+
+|Node Type
+|Job Template
+
+|Job Template
+|Windows Server Applications
+
+|Status
+|Always run
+
+|Convergence
+|Any
+|===
+
+3. **Click Next and Finish**
+4. **Select Save** to save the workflow
+
+### **Step 4: Execute the Workflow**
+
+1. **Navigate to Automation Execution → Templates**
+2. **Select the Windows Apps and Settings workflow**
+3. **Click Launch template**
+
+**Monitor the workflow execution** in the output. You'll observe how the workflow orchestrates multiple job templates:
+
+* **First:** Windows Registry keys configuration (completes with green checkmark)
+* **Then:** Windows Server Applications installation (blue spinning arrows while running)
+
+[role="border"]
+image::workflow-action.png[Workflow Execution Status]
 
 [NOTE]
 ====
 The complete workflow takes approximately 3-4 minutes. Both Windows servers will be configured with necessary registry changes and applications required by development teams.
 ====
 
-==== Step 5: Verify Application Deployment
+### **Step 5: Verify Application Deployment**
 
-. Click on the *Windows Server Applications* icon in the Visualizer
-. Review the job output to verify deployed applications
-. Notice packages like procexp, windirstat, and other development tools have been installed
+1. **Click on the Windows Server Applications icon** in the Visualizer
+2. **Review the job output** to verify deployed applications
+3. **Notice packages like procexp, windirstat, and other development tools** have been installed
 
-.Application Installation Results
-image::/apps.png[Installed Applications]
+[role="border"]
+image::apps.png[Application Installation Results]
 
-=== Exercise 2: Domain Controller Configuration
+---
 
-==== Understanding the New Request
+## Exercise 2: Domain Controller Configuration
 
-.Support Ticket #002
-image::/ticket02.png[Support Ticket 002]
+### Understanding the New Request
+
+[role="border"]
+image::ticket02.png[Support Ticket 002]
 
 A new infrastructure request has arrived from the operations team:
-- Configure one Windows server as a domain controller
-- Prepare another server for database services
-- Ensure compliance with organizational policies
+* **Configure one Windows server** as a domain controller
+* **Prepare another server** for database services
+* **Ensure compliance** with organizational policies
 
 Your Windows SMEs have provided job templates to deploy this environment consistently.
 
-==== Step 1: Verify Current Server State
+### **Step 1: Verify Current Server State**
 
-. Navigate to the `windows` tab
-. Click the *Start/Windows* button and open *Server Manager*
-. Select *Local Server*
-. Verify the server is currently part of the default *WORKGROUP* with limited services
+1. **Navigate to the Windows tab**
+2. **Click the Start/Windows button** and open **Server Manager**
+3. **Select Local Server**
+4. **Verify the server is currently part** of the default **WORKGROUP** with limited services
 
-.Current Server Configuration
-image::/workgroup.png[Workgroup Configuration]
+[role="border"]
+image::workgroup.png[Current Server Configuration]
 
-==== Step 2: Configure Secure Credentials
+### **Step 2: Configure Secure Credentials**
 
-. Navigate to your `aap` tab
-. Go to *Automation Execution* → *Templates*
-. Edit the *Windows Domain Controller* template
+1. **Navigate to your AAP tab**
+2. **Go to Automation Execution → Templates**
+3. **Edit the Windows Domain Controller template**
 
 Your Windows team has provided an Ansible Vault for secure credential storage. This ensures Active Directory credentials remain encrypted and protected.
 
-===== Adding Vault Credentials:
+**Adding Vault Credentials:**
 
-. Click *Edit template*
-. In the *Credentials* section, add the *Windows Vault* credential
-. Save the job template
+1. **Click Edit template**
+2. **In the Credentials section, add the Windows Vault credential**
+3. **Save the job template**
 
-.Vault Credential Configuration
-image::/vault.png[Vault Credential Setup]
+[role="border"]
+image::vault.png[Vault Credential Configuration]
 
 [IMPORTANT]
 ====
 Ansible Vault credentials ensure sensitive information remains encrypted and secure. You don't have direct access to the credentials, maintaining security best practices.
 ====
 
-==== Step 3: Deploy Active Directory
+### **Step 3: Deploy Active Directory**
 
-. Launch the job template using *Launch template*
-. Monitor the output as each task executes
+1. **Launch the job template** using **Launch template**
+2. **Monitor the output** as each task executes
 
-.Domain Configuration Process
-image::/dnsdomain.png[DNS Domain Configuration]
+[role="border"]
+image::dnsdomain.png[Domain Configuration Process]
 
-The template will display the domain/forest information generated by the environment. Record this domain detail for future reference.
+**The template will display the domain/forest information** generated by the environment. Record this domain detail for future reference.
 
 [NOTE]
 ====
 This process takes several minutes to deploy Active Directory and reboot the system. After reboot, default Group Policies will also be applied.
 ====
 
-==== Step 4: Verify Domain Controller Configuration
+### **Step 4: Verify Domain Controller Configuration**
 
 After the system reboots:
 
-. Click *Start/Windows* and open *Server Manager*
-. Verify the domain now reflects your DNS domain from the template output
-. Confirm that *DNS* and *Active Directory* services are running
+1. **Click Start/Windows** and open **Server Manager**
+2. **Verify the domain now reflects** your DNS domain from the template output
+3. **Confirm that DNS and Active Directory services** are running
 
-.Active Directory Services
-image::/assets/domain.png[Active Directory Configuration]
+[role="border"]
+image::domain.png[Active Directory Services Configuration]
 
-=== Exercise 3: RHEL Server Deployment
+---
 
-==== Expanding Infrastructure
+## Exercise 3: RHEL Server Deployment
+
+### Expanding Infrastructure
 
 With Active Directory configured and Windows servers deployed, the next step involves deploying a RHEL system for streaming applications. Your standardized build templates will streamline this process.
 
@@ -216,52 +277,48 @@ With Active Directory configured and Windows servers deployed, the next step inv
 This exercise simulates provisioning tasks. In production environments, you would customize instance configurations to meet specific requirements.
 ====
 
-==== Step 1: Review Current Inventory
+### **Step 1: Review Current Inventory**
 
-. Navigate to *Automation Execution* → *Infrastructure* → *Inventories*
-. Examine existing inventories:
-  - Network environments
-  - Windows environments  
-  - Video Platform Inventory (currently contains only a loadbalancer group)
+1. **Navigate to Automation Execution → Infrastructure → Inventories**
+2. **Examine existing inventories:**
+   * Network environments
+   * Windows environments
+   * Video Platform Inventory (currently contains only a loadbalancer group)
 
-.Current Inventory State
-image::/invbefore.png[Inventory Before Deployment]
+[role="border"]
+image::invbefore.png[Current Inventory State]
 
-You need to deploy a RHEL system and configure a webservers group for future use.
+**You need to deploy a RHEL system** and configure a webservers group for future use.
 
-==== Step 2: Deploy New Node
+### **Step 2: Deploy New Node**
 
-. Navigate to *Automation Execution* → *Templates*
-. Launch the *Deploy Node* template
-. When prompted for the node name, enter: `node01`
-. Submit the job
+1. **Navigate to Automation Execution → Templates**
+2. **Launch the Deploy Node template**
+3. **When prompted for the node name, enter:** `node01`
+4. **Submit the job**
 
 [TIP]
 ====
 In this simulated environment, we use configuration as code to build inventory. With inventory plugins, you could synchronize against an inventory source.
 ====
 
-==== Step 3: Verify Inventory Updates
+### **Step 3: Verify Inventory Updates**
 
-. Once the job completes, navigate to *Automation Execution* → *Infrastructure* → *Inventories*
-. Observe the new *webservers* group with your new node in the *Video Platform Inventory*
+1. **Once the job completes**, navigate to **Automation Execution → Infrastructure → Inventories**
+2. **Observe the new webservers group** with your new node in the **Video Platform Inventory**
 
-.Updated Inventory State
-image::/invafter.png[Inventory After Deployment]
+[role="border"]
+image::invafter.png[Updated Inventory State]
 
-== Code Reference
+---
 
-=== Windows Application Installation with Chocolatey
+## Code Reference
+
+### Windows Application Installation with Chocolatey
 
 Here's the automation code for installing standardized Windows applications:
 
-[source,asciidoc]
-----
-IGNOREME
-----
-
-[source,yaml]
-----
+```yaml
 tasks:
   - name: Ensure Chocolatey is installed
     win_chocolatey:
@@ -286,14 +343,13 @@ tasks:
   - name: Show python version
     ansible.builtin.debug:
       msg: Python Version is {{ check_python_version.stdout_lines[0] }}
-----
+```
 
-=== Domain Controller Promotion
+### Domain Controller Promotion
 
 Here's the code for promoting Windows servers to domain controllers:
 
-[source,yaml]
-----
+```yaml
 tasks:
   - name: Ensure local Administrator account has a password
     ansible.windows.win_user:
@@ -318,38 +374,23 @@ tasks:
       profiles: domain,private,public
       state: present
       enabled: yes
-----
+```
 
-== Key Takeaways
+### Key Components Explained
 
-You've successfully demonstrated advanced Ansible automation capabilities:
+#### Workflow Orchestration
+* **Sequential task execution** with dependency management
+* **Conditional logic** for different execution paths
+* **Error handling** and recovery procedures
 
-* ✅ **Workflow Orchestration**: Created complex workflows combining multiple job templates
-* ✅ **Secure Credential Management**: Implemented Ansible Vault for sensitive data protection  
-* ✅ **Standardized Deployments**: Applied consistent configurations across multiple environments
-* ✅ **Infrastructure as Code**: Managed inventory through automated provisioning
-* ✅ **Multi-Platform Management**: Orchestrated both Windows and Linux system deployments
+#### Secure Credential Management
+* **Ansible Vault encryption** for sensitive data
+* **Role-based access control** for credential management
+* **Audit trails** for credential usage
 
-== Next Steps
+#### Standardized Deployments
+* **Template-driven consistency** across environments
+* **Variable management** for environment-specific configurations
+* **Version control integration** for infrastructure as code
 
-With these advanced automation skills, you're ready for enterprise-scale scenarios:
-
-**Immediate Opportunities:**
-- Expand workflows to include testing and validation steps
-- Implement approval processes for production deployments
-- Create environment-specific variable management
-- Develop rollback procedures for failed deployments
-
-**Advanced Automation Patterns:**
-- Implement blue-green deployment strategies
-- Create self-healing infrastructure workflows
-- Build compliance validation into deployment pipelines
-- Develop automated disaster recovery procedures
-
-**Organizational Benefits:**
-- Reduced deployment time from hours to minutes
-- Eliminated configuration drift across environments
-- Improved security through encrypted credential management
-- Enhanced collaboration between development and operations teams
-
-You've now demonstrated how Ansible Automation Platform transforms manual, error-prone processes into reliable, repeatable automation that scales across your entire infrastructure.
+---
