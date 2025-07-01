@@ -186,15 +186,15 @@ virtualmachines:
     services:
       - name: haproxy-http
         ports:
-          - port: 80
+          - port: 8080
             protocol: TCP
-            targetPort: 80
+            targetPort: 8080
             name: haproxy
     routes:
       - name: haproxy-web
         host: haproxy
         service: haproxy-http
-        targetPort: 80
+        targetPort: 8080
         tls: true
         tls_termination: Edge
     userdata: |-
