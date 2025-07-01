@@ -23,12 +23,12 @@ tabs:
     external: false
   - name: Webapp-windows
     url: https://dbserver-${guid}.${domain}/
-    external: false
+    external: true
   - name: Webapp-rhel
     url: https://node01-${guid}.${domain}/index.html
-    external: false
+    external: true
   - name: loadbalancer
     url: https://haproxy-${guid}.${domain}/
-    external: false
+    external: true
   - name: haproxy
     url: /wetty_haproxy
