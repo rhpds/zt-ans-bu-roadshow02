@@ -23,10 +23,10 @@ tabs:
     external: false
   - name: Webapp-windows
     url: https://dbserver-${guid}.${domain}/
-    external: true
+    external: false
   - name: Webapp-rhel
     url: https://node01-${guid}.${domain}/index.html
-    external: true
+    external: false
   - name: loadbalancer
     url: https://haproxy-${guid}.${domain}/
-    external: true
+    external: false
