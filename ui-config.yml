@@ -30,3 +30,5 @@ tabs:
   - name: loadbalancer
     url: https://haproxy-${guid}.${domain}/
     external: false
+  - name: haproxy
+    url: /wetty_haproxy
