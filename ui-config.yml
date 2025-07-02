@@ -18,17 +18,32 @@ tabs:
   - name: aap
     url: https://control-${guid}.${domain}/
     external: false
+    modules:
+      - module-01
+      - module-02
+      - module-03
   - name: Windows
     url: https://windows-ironrdp-${guid}.${domain}/
     external: false
+    modules:
+     - module-01
+     - module-02
   - name: Webapp-windows
     url: https://dbserver-${guid}.${domain}/
     external: true
+    modules:
+     - module-03
   - name: Webapp-rhel
     url: https://node01-${guid}.${domain}/index.html
     external: true
+    modules:
+     - module-03
   - name: loadbalancer
     url: https://haproxy-${guid}.${domain}/
     external: true
+    modules:
+     - module-03
   - name: haproxy
     url: /wetty_haproxy
+    modules:
+     - module-03
