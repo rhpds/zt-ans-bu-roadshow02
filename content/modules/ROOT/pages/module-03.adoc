@@ -45,12 +45,12 @@ First, let's deploy the web application on your Windows server using IIS:
 2. **Go to Automation Execution → Templates**
 3. **Launch the Windows Deploy WebApp template**
 
-**This automation will:**
+This automation will:
 
-**Configure IIS web server** on Windows
-**Deploy application files** and dependencies
-**Configure proper security** and access permissions
-**Start necessary Windows services**
+Configure IIS web server on Windows
+Deploy application files and dependencies
+Configure proper security and access permissions
+Start necessary Windows services
 
 ### **Step 2: Verify Windows Deployment**
 
