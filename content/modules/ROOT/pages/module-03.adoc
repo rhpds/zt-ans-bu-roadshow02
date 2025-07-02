@@ -1,21 +1,6 @@
 # Web Application Deployment and Load Balancing with Ansible
 *Lab Guide - Scenario 02: Standardized Consistency (Final Phase)*
 
----
-
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Lab Environment Setup](#lab-environment-setup)
-3. [Exercise 1: Multi-Platform Web Application Deployment](#exercise-1-multi-platform-web-application-deployment)
-4. [Exercise 2: Load Balancer Configuration](#exercise-2-load-balancer-configuration)
-5. [Code Reference](#code-reference)
-6. [Architecture Overview](#architecture-overview)
-7. [Key Takeaways](#key-takeaways)
-8. [Project Completion Summary](#project-completion-summary)
-9. [Next Steps](#next-steps)
-
----
 
 ## Introduction
 
