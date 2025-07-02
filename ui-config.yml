@@ -43,7 +43,3 @@ tabs:
     external: true
     modules:
      - module-03
-  - name: haproxy
-    url: /wetty_haproxy
-    modules:
-     - module-03
