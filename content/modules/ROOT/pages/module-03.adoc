@@ -15,10 +15,10 @@ This exercise demonstrates how Ansible can orchestrate complex, multi-tier appli
 
 By the end of this lab, you will be able to:
 
-**Deploy web applications** across both Windows and RHEL platforms using platform-specific configurations
-**Configure load balancing** with HAProxy for high availability and traffic distribution
-**Implement service discovery** and dynamic server configuration
-**Orchestrate complete application stacks** from infrastructure to application deployment
+* **Deploy web applications** across both Windows and RHEL platforms using platform-specific configurations
+* **Configure load balancing** with HAProxy for high availability and traffic distribution
+* **Implement service discovery** and dynamic server configuration
+* **Orchestrate complete application stacks** from infrastructure to application deployment
 
 ---
 
@@ -45,12 +45,12 @@ First, let's deploy the web application on your Windows server using IIS:
 2. **Go to Automation Execution → Templates**
 3. **Launch the Windows Deploy WebApp template**
 
-This automation will:
+**This automation will:**
 
-Configure IIS web server on Windows
-Deploy application files and dependencies
-Configure proper security and access permissions
-Start necessary Windows services
+* **Configure IIS web server** on Windows
+* **Deploy application files** and dependencies
+* **Configure proper security** and access permissions
+* **Start necessary Windows services**
 
 ### **Step 2: Verify Windows Deployment**
 
@@ -72,6 +72,7 @@ Now deploy the same application on your RHEL server using Apache:
 2. **Launch the RHEL Deploy WebApp template**
 
 **This automation will:**
+
 * **Configure Apache web server** on RHEL
 * **Clone application source code** from repository
 * **Deploy and configure** application files
@@ -112,7 +113,7 @@ image::loadbalancer.png[Load Balancer Before Configuration]
 
 1. **Navigate to Automation Execution → Templates**
 2. **Launch the Configure Loadbalancer template**
-3. **When prompted for hostname, provide:** `node01.{dns_domain}
+3. **When prompted for hostname, provide:** `node01.{dns_domain}`
 
 [role="border"]
 image::hostname.png[HAProxy Configuration Input]
