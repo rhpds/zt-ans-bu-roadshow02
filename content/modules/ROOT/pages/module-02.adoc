@@ -24,7 +24,7 @@ By the end of this lab, you will be able to:
 
 ## Lab Environment Setup
 
-Your DNS domain for this lab is: **[[ Instruqt-Var key="DOMAIN" hostname="control" ]]**
+Your DNS domain for this lab is: **{dns_domain}**
 
 [NOTE]
 ====
@@ -150,7 +150,7 @@ image::enablesurvey.png[Survey Enable Toggle]
 #### **Step 3: Execute RHEL Domain Join**
 
 1. **Launch the template**
-2. **When prompted, provide your DNS domain information:** **[[ Instruqt-Var key="DOMAIN" hostname="control" ]]**
+2. **When prompted, provide your DNS domain information:** **{dns_domain}**
 
 [role="border"]
 image::joindomain.png[RHEL Domain Join Input]
