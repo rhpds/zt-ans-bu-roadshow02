@@ -111,7 +111,7 @@ image::loadbalancer.png[Load Balancer Before Configuration]
 
 1. **Navigate to Automation Execution → Templates**
 2. **Launch the Configure Loadbalancer template**
-3. **When prompted for hostname, provide:** `node01.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]`
+3. **When prompted for hostname, provide:** `node01.{dns_domain}
 
 [role="border"]
 image::hostname.png[HAProxy Configuration Input]
@@ -121,7 +121,7 @@ image::hostname.png[HAProxy Configuration Input]
 ### **Step 3: Add Windows Server to Load Balancer**
 
 1. **Re-run the Configure Loadbalancer template**
-2. **When prompted for hostname, provide:** `dbserver.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]`
+2. **When prompted for hostname, provide:** `dbserver.{dns_domain}`
 
 **The load balancer will now distribute traffic** between both your Windows and RHEL application servers.
 
