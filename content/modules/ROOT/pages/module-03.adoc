@@ -15,10 +15,10 @@ This exercise demonstrates how Ansible can orchestrate complex, multi-tier appli
 
 By the end of this lab, you will be able to:
 
-* **Deploy web applications** across both Windows and RHEL platforms using platform-specific configurations
-* **Configure load balancing** with HAProxy for high availability and traffic distribution
-* **Implement service discovery** and dynamic server configuration
-* **Orchestrate complete application stacks** from infrastructure to application deployment
+**Deploy web applications** across both Windows and RHEL platforms using platform-specific configurations
+**Configure load balancing** with HAProxy for high availability and traffic distribution
+**Implement service discovery** and dynamic server configuration
+**Orchestrate complete application stacks** from infrastructure to application deployment
 
 ---
 
@@ -47,13 +47,10 @@ First, let's deploy the web application on your Windows server using IIS:
 
 **This automation will:**
 
-* **Configure IIS web server** on Windows
-
-* **Deploy application files** and dependencies
-
-* **Configure proper security** and access permissions
-
-* **Start necessary Windows services**
+**Configure IIS web server** on Windows
+**Deploy application files** and dependencies
+**Configure proper security** and access permissions
+**Start necessary Windows services**
 
 ### **Step 2: Verify Windows Deployment**
 
