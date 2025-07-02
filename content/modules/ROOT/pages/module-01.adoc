@@ -186,8 +186,11 @@ image::apps.png[Application Installation Results]
 image::ticket02.png[Support Ticket 002]
 
 A new infrastructure request has arrived from the operations team:
+
 * **Configure one Windows server** as a domain controller
+
 * **Prepare another server** for database services
+
 * **Ensure compliance** with organizational policies
 
 Your Windows SMEs have provided job templates to deploy this environment consistently.
