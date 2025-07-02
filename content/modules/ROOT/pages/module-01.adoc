@@ -33,17 +33,17 @@ By the end of this lab, you will be able to:
 
 ### Server Information
 
-Your DNS domain for this lab is: **[[ Instruqt-Var key="DOMAIN" hostname="control" ]]**
+Your DNS domain for this lab is: **{dns_domain}**
 
 [cols="1,1", options="header"]
 |===
 |Server |FQDN
 
 |Domain Controller
-|windows.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]
+|windows.{dns_domain}
 
 |Dev Windows Server
-|dbserver.[[ Instruqt-Var key="DOMAIN" hostname="control" ]]
+|dbserver.{dns_domain}
 |===
 
 ---
