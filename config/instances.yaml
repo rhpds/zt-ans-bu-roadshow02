@@ -207,7 +207,7 @@ virtualmachines:
         - systemctl reload sshd
 
   - name: "windows"
-    image: "base-windows-ad-2022.qcow2"
+    image: "base-windows-ad-2022"
     memory: "32G"
     cores: 32
     image_size: "65Gi"
@@ -247,7 +247,7 @@ virtualmachines:
         tls_termination: Edge
 
   - name: "dbserver"
-    image: "base-windows-srv-2019.qcow2" 
+    image: "base-windows-srv-2019"
     memory: "16G"
     cores: 4
     image_size: "65Gi"
