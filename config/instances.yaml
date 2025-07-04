@@ -2,7 +2,7 @@
 # Containers are under development
 containers:
   - name: gitea
-    image: gitea:1.16.8-rootless
+    image: gitea/gitea:1.16.8-rootless
     ports:
       - name: gitea
         containerPort: 3000
