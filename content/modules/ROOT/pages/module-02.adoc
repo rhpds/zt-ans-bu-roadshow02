@@ -1,5 +1,5 @@
 = Lab Guide: Managing Active Directory and Domain Membership
-:toc:
+:notoc:
 :toc-title: Table of Contents
 :sectnums:
 :icons: font
