@@ -12,7 +12,7 @@ _A guide to using Ansible Automation Platform to create Active Directory objects
 
 Great job on the initial server setup. A ticket update has just arrived!
 
-image::../assets/images/ticket03.png[Support ticket update, opts="border"]
+image::ticket03.png[Support ticket update, opts="border"]
 
 Now that you have a domain, some Windows systems, and a new RHEL system, you're ready for the next set of automation tasks. Let's get to it!
 
@@ -41,7 +41,7 @@ Click **Next**, then **Finish** to start the job.
 +
 Once the job is complete, navigate to the `windows` tab in your lab environment. From the Start Menu, select **Windows Administrative Tools**, then choose **Active Directory Users and Computers**. Expand your domain to confirm that the `Testing` OU, the `TMM-Dev` group, and the new developer accounts have all been successfully created.
 +
-image::../assets/images/accounts.png[Active Directory Users and Computers showing the new OU, group, and users, opts="border"]
+image::accounts.png[Active Directory Users and Computers showing the new OU, group, and users, opts="border"]
 
 ---
 
@@ -53,13 +53,13 @@ With the servers configured and AD objects in place, the final step is to join t
 +
 Navigate back to your `aap` tab. Go to **Automation Execution** → **Templates** and launch the **Windows Join Domain** job template. Once the job is complete, you can verify its success in **Active Directory Users and Computers** on the Windows server.
 +
-image::../assets/images/serverjoined01.png[Computers container in Active Directory, opts="border"]
+image::serverjoined01.png[Computers container in Active Directory, opts="border"]
 
 . **Add a survey to the RHEL domain join template.**
 +
 To make the RHEL process more flexible, let's add a survey. Navigate to **Automation Execution** → **Templates**, click on the name of the **RHEL Join AD** template, and go to the **Survey** tab.
 +
-image::../assets/images/addsurvey.png[Adding a survey to a job template, opts="border"]
+image::addsurvey.png[Adding a survey to a job template, opts="border"]
 +
 Click **Create survey question** and configure it with the following details:
 +
@@ -69,7 +69,7 @@ Click **Create survey question** and configure it with the following details:
 +
 After creating the question, be sure to **enable the survey** using the toggle switch at the top of the page.
 +
-image::../assets/images/enablesurvey.png[Enabling the survey with the toggle switch, opts="border"]
+image::enablesurvey.png[Enabling the survey with the toggle switch, opts="border"]
 
 . **Join the RHEL server to the domain.**
 +
@@ -77,7 +77,7 @@ Navigate back to the main **Templates** list and launch the **RHEL Join AD** tem
 +
 **{dns_domain}**
 +
-image::../assets/images/joindomain.png[Entering the domain in the survey prompt, opts="border"]
+image::joindomain.png[Entering the domain in the survey prompt, opts="border"]
 +
 Click **Next** to launch the job.
 
@@ -85,7 +85,7 @@ Click **Next** to launch the job.
 +
 Once complete, return to the `windows` tab and refresh the **Active Directory Users and Computers** view. You should now see both the Windows and RHEL systems listed in the domain's Computers container.
 +
-image::../assets/images/verify.png[Both servers listed in Active Directory, opts="border"]
+image::verify.png[Both servers listed in Active Directory, opts="border"]
 
 ---
 
