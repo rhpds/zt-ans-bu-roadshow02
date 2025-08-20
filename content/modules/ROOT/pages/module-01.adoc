@@ -1,5 +1,5 @@
 # Standardized Environment Deployment with Ansible
-:toc:
+:notoc:
 :toc-title: Table of Contents
 :sectnums:
 :icons: font
