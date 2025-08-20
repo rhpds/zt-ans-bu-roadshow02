@@ -32,7 +32,7 @@ First, log into the Ansible Automation Platform instance using the credentials b
 
 == Baseline Configuration and Applications
 
-image::../assets/images/ticket01.png[Support ticket for UAT configuration, opts="border"]
+image::ticket01.png[Support ticket for UAT configuration, opts="border"]
 
 A support ticket has arrived requesting configuration updates for two Windows servers in the UAT environment. The request involves deploying standard applications and making specific registry changes. You will use a workflow template to tie multiple jobs together and address the entire request in a consistent, repeatable process.
 
@@ -51,13 +51,13 @@ Click **Create workflow template** to open the Workflow Visualizer.
 +
 Click **Add Step** to open the side panel. Configure the first node as follows:
 +
-image::../assets/images/workflow_create.png[Workflow Visualizer Add Step button, opts="border"]
+image::workflow_create.png[Workflow Visualizer Add Step button, opts="border"]
 +
 * **Node Type:** `Job Template`
 * **Job Template:** `Windows Registry keys`
 * **Convergence:** `Any`
 +
-image::../assets/images/sidecar.png[Sidecar panel for adding a workflow node, opts="border"]
+image::sidecar.png[Sidecar panel for adding a workflow node, opts="border"]
 +
 Click **Next**, then **Finish**.
 
@@ -65,7 +65,7 @@ Click **Next**, then **Finish**.
 +
 Hover over the node you just created, click the **`+...+`** menu, and select **Add step and link**. Configure the second node as follows:
 +
-image::../assets/images/sidecarworkflow.png[Adding a linked step in the workflow, opts="border"]
+image::sidecarworkflow.png[Adding a linked step in the workflow, opts="border"]
 +
 * **Node Type:** `Job Template`
 * **Job Template:** `Windows Server Applications`
@@ -82,17 +82,17 @@ Navigate back to **Automation Execution** → **Templates** and launch the **Win
 +
 In the Output view, you can see the progress as each job template runs in sequence.
 +
-image::../assets/images/workflow-action.png[Workflow running in the visualizer, opts="border"]
+image::workflow-action.png[Workflow running in the visualizer, opts="border"]
 +
 Once the workflow is complete (after 3-4 minutes), click on the **Windows Server Applications** node and review the job output. You can verify that packages like `procexp` and `windirstat` were installed.
 +
-image::../assets/images/apps.png[Job output showing installed applications, opts="border"]
+image::apps.png[Job output showing installed applications, opts="border"]
 
 ---
 
 == Configuring the Windows Domain Controller
 
-image::../assets/images/ticket02.png[Support ticket for new infrastructure, opts="border"]
+image::ticket02.png[Support ticket for new infrastructure, opts="border"]
 
 A new request has arrived to configure a Windows server as a domain controller. Your Windows SMEs have provided a Job Template to ensure the deployment is consistent and compliant.
 
@@ -100,7 +100,7 @@ A new request has arrived to configure a Windows server as a domain controller. 
 +
 Navigate to the `windows` tab in your lab environment. On the Windows Server desktop, open **Server Manager**, select **Local Server**, and verify that the server is part of the default **WORKGROUP**.
 +
-image::../assets/images/workgroup.png[Windows Server in a WORKGROUP, opts="border"]
+image::workgroup.png[Windows Server in a WORKGROUP, opts="border"]
 
 . **Add the Vault Credential to the Job Template.**
 +
@@ -111,13 +111,13 @@ Navigate to your `aap` tab. Go to **Automation Execution** → **Templates** and
 | In edit mode, click on **Credentials** and add the **Windows Vault** credential. By using a vault, you can run the job without ever seeing the sensitive passwords directly. | Save the job template after adding the credential.
 |===
 +
-image::../assets/images/vault.png[Adding a vault credential to a job template, opts="border"]
+image::vault.png[Adding a vault credential to a job template, opts="border"]
 
 . **Launch the Job Template.**
 +
 Launch the **Windows Domain Controller** job template. As the job runs, it will display the domain it is configuring. Be sure to note this domain name.
 +
-image::../assets/images/dnsdomain.png[Job output showing the DNS domain, opts="border"]
+image::dnsdomain.png[Job output showing the DNS domain, opts="border"]
 +
 NOTE: This process will take several minutes to deploy Active Directory and reboot the system.
 
@@ -125,7 +125,7 @@ NOTE: This process will take several minutes to deploy Active Directory and rebo
 +
 Once the Windows server has rebooted, return to the `windows` tab and open **Server Manager**. You should now see that the server is part of the new domain and that the **AD DS** and **DNS** services are running.
 +
-image::../assets/images/domain.png[Windows Server as a Domain Controller, opts="border"]
+image::domain.png[Windows Server as a Domain Controller, opts="border"]
 
 ---
 
@@ -137,7 +137,7 @@ Now that your Windows infrastructure is set, the next step is to deploy a RHEL s
 +
 Navigate to **Automation Execution** → **Infrastructure** → **Inventories** and select the **Video Platform Inventory**. Notice that it currently only contains a `loadbalancer` group.
 +
-image::../assets/images/invbefore.png[Inventory before node deployment, opts="border"]
+image::invbefore.png[Inventory before node deployment, opts="border"]
 
 . **Deploy the new node.**
 +
@@ -149,7 +149,7 @@ NOTE: This is a simulated provisioning task. In a real-world scenario, you could
 +
 Once the job is complete, return to the **Video Platform Inventory**. You will see that a `webservers` group has been added, containing your new `node01`.
 +
-image::../assets/images/invafter.png[Inventory after node deployment, opts="border"]
+image::invafter.png[Inventory after node deployment, opts="border"]
 
 ---
 
