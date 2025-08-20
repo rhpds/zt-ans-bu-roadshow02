@@ -1,7 +1,6 @@
 = Lab Guide: Standardized System Consistency
 :toc:
 :toc-title: Table of Contents
-:sectnums:
 :icons: font
 
 _A guide to using pre-built Ansible playbooks and workflows to deploy and configure environments consistently._
