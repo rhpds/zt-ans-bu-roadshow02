@@ -1,234 +1,146 @@
-# Active Directory Domain Management with Ansible
-*Lab Guide - Scenario 02: Standardized Consistency (Continued)*
+= Lab Guide: Managing Active Directory and Domain Membership
+:toc:
+:toc-title: Table of Contents
+:sectnums:
+:icons: font
 
-
-## Introduction
-
-Excellent work on the initial deployment! However, as often happens in IT operations, requirements have evolved. You've received an updated ticket that builds upon your existing infrastructure.
-
-[role="border"]
-image::ticket03.png[Updated Support Ticket #003]
-
-Now that you have a functioning domain, Windows systems, and a new RHEL system deployed, it's time to complete the environment setup by managing user accounts, organizational units, and domain membership across your hybrid infrastructure.
-
-### Learning Objectives
-
-By the end of this lab, you will be able to:
-
-* **Create and manage Active Directory organizational units** and security groups
-* **Automate user account creation** with appropriate group memberships
-* **Join both Windows and Linux systems** to Active Directory domains
-* **Implement survey-driven automation** for dynamic configuration input
+_A guide to using Ansible Automation Platform to create Active Directory objects and join both Windows and RHEL servers to a domain._
 
 ---
 
-## Lab Environment Setup
+== Scenario: Standardized Consistency
 
-Your DNS domain for this lab is: **{dns_domain}**
+Great job on the initial server setup. A ticket update has just arrived!
 
-[NOTE]
-====
-This lab builds upon the infrastructure deployed in the previous scenario. Ensure your domain controller and initial systems are properly configured before proceeding.
-====
+image::../assets/images/ticket03.png[Support ticket update, opts="border"]
 
----
-
-## Exercise 1: Creating Organizational Units and User Accounts
-
-Active Directory requires proper organizational structure to manage users and resources effectively. You'll create the necessary organizational units and groups for your development teams.
-
-### **Step 1: Deploy Active Directory Structure**
-
-1. **Navigate to Automation Execution → Templates**
-2. **Launch the Windows Users and OU template**
-
-[NOTE]
-====
-This template may appear on page 2 of your template list, depending on your screen resolution.
-====
-
-### **Step 2: Configure Organizational Details**
-
-**When prompted, provide the following configuration details:**
-
-[cols="1,1", options="header"]
-|===
-|Field |Value
-
-|OU
-|Testing
-
-|Group
-|TMM-Dev
-|===
-
-3. **Click Next and Finish** to start the job
-
-**The automation will create** the organizational structure and populate it with the necessary user accounts and groups for your development environment.
-
-### **Step 3: Verify Active Directory Configuration**
-
-Once the job completes, verify the configuration on your domain controller:
-
-1. **Navigate to the Windows tab**
-2. **Click the Start/Windows button**
-3. **Select Windows Administrative Tools → Active Directory Users and Computers**
-4. **Expand the domain structure**
-
-**Confirm that the following have been successfully created:**
-* **Testing OU** (Organizational Unit)
-* **TMM-Dev group**
-* **Developer user accounts**
-
-[role="border"]
-image::accounts.png[Active Directory Structure - Accounts and OUs]
+Now that you have a domain, some Windows systems, and a new RHEL system, you're ready for the next set of automation tasks. Let's get to it!
 
 ---
 
-## Exercise 2: Domain Membership Management
+== Creating Active Directory Users and OUs
 
-With your Active Directory structure in place, you need to join both Windows and Linux systems to the domain for centralized management and authentication.
+First, you'll create an Organizational Unit (OU) and a group for the developers, then populate it with user accounts.
 
-### Windows Server Domain Join
+. **Launch the "Windows Users and OU" template.**
++
+Navigate to **Automation Execution** → **Templates**. Find and launch the **Windows Users and OU template** by clicking the launch icon (🚀).
++
+NOTE: Depending on your screen resolution, this template may be on the second page of the templates list.
 
-#### **Step 1: Join Windows Server to Domain**
+. **Provide the survey details.**
++
+During the launch process, you'll be prompted with a survey. Use the following details for this task:
++
+* **OU:** `Testing`
+* **Group:** `TMM-Dev`
++
+Click **Next**, then **Finish** to start the job.
 
-1. **Navigate back to your AAP tab**
-2. **Go to Automation Execution → Templates**
-3. **Launch the Windows Join Domain template**
-
-#### **Step 2: Verify Windows Domain Membership**
-
-1. **Navigate to the Windows tab**
-2. **Click Start/Windows → Windows Administrative Tools → Active Directory Users and Computers**
-
-**You should see your Windows server** listed in the domain structure.
-
-[role="border"]
-image::serverjoined01.png[Windows Server Domain Membership]
-
-### RHEL Server Domain Join
-
-#### **Step 1: Configure Survey for Domain Input**
-
-Your RHEL systems also need domain membership, but first you need to create a flexible survey to specify domain information:
-
-1. **Navigate to Automation Execution → Templates**
-2. **Select the RHEL Join AD template**
-3. **Click on the Survey tab**
-
-[role="border"]
-image::addsurvey.png[Survey Configuration Interface]
-
-#### **Step 2: Create Domain Survey Question**
-
-1. **Click Create survey question**
-2. **Configure the survey** with the following details:
-
-**Survey Configuration:**
-
-[cols="1,2", options="header"]
-|===
-|Field |Value
-
-|Question
-|Please provide the domain to join
-
-|Description
-|Domain/Forest information
-
-|Answer variable name
-|domain
-|===
-
-3. **Click Create survey question**
-4. **Enable the survey** using the toggle
-
-[role="border"]
-image::enablesurvey.png[Survey Enable Toggle]
-
-#### **Step 3: Execute RHEL Domain Join**
-
-1. **Launch the template**
-2. **When prompted, provide your DNS domain information:** **{dns_domain}**
-
-[role="border"]
-image::joindomain.png[RHEL Domain Join Input]
-
-3. **Click Next** to proceed
-
-#### **Step 4: Verify Complete Domain Integration**
-
-After both Windows and RHEL domain joins complete:
-
-1. **Navigate to the Windows tab**
-2. **Open Start/Windows → Windows Administrative Tools → Active Directory Users and Computers**
-3. **Verify that both systems appear** in the domain
-
-[role="border"]
-image::verify.png[Domain Membership Verification]
-
-[TIP]
-====
-Having both Windows and RHEL systems in the same domain enables centralized authentication, policy management, and simplified administration across your hybrid infrastructure.
-====
+. **Verify the new AD objects.**
++
+Once the job is complete, navigate to the `windows` tab in your lab environment. From the Start Menu, select **Windows Administrative Tools**, then choose **Active Directory Users and Computers**. Expand your domain to confirm that the `Testing` OU, the `TMM-Dev` group, and the new developer accounts have all been successfully created.
++
+image::../assets/images/accounts.png[Active Directory Users and Computers showing the new OU, group, and users, opts="border"]
 
 ---
 
-## Code Reference
+== Joining Servers to the Domain (Optional)
 
-### Active Directory User and Group Management
+With the servers configured and AD objects in place, the final step is to join the servers to the domain.
 
-Here's the automation code for creating organizational units, groups, and users:
+. **Join the Windows server to the domain.**
++
+Navigate back to your `aap` tab. Go to **Automation Execution** → **Templates** and launch the **Windows Join Domain** job template. Once the job is complete, you can verify its success in **Active Directory Users and Computers** on the Windows server.
++
+image::../assets/images/serverjoined01.png[Computers container in Active Directory, opts="border"]
 
-```yaml
-tasks:
-  - name: Create a group in an OU
-    microsoft.ad.group:
-      identity: "{{ group_name }}"
-      scope: global
-      path: "{{ ou_path }}"
-      state: present
+. **Add a survey to the RHEL domain join template.**
++
+To make the RHEL process more flexible, let's add a survey. Navigate to **Automation Execution** → **Templates**, click on the name of the **RHEL Join AD** template, and go to the **Survey** tab.
++
+image::../assets/images/addsurvey.png[Adding a survey to a job template, opts="border"]
++
+Click **Create survey question** and configure it with the following details:
++
+* **Question:** `Please provide the domain to join`
+* **Description:** `Domain/Forest information`
+* **Answer variable name:** `domain`
++
+After creating the question, be sure to **enable the survey** using the toggle switch at the top of the page.
++
+image::../assets/images/enablesurvey.png[Enabling the survey with the toggle switch, opts="border"]
 
-  - name: Create users for lab
-    microsoft.ad.user:
-      identity: "{{ item.key }}"
-      password: "{{ user_password }}"
-      firstname: "{{ item.value.firstname }}"
-      surname: "{{ item.value.surname }}"
-      state: present
-      groups:
-        set:
-          - "{{ group_name }}"
-          - Domain Users
-    loop: "{{ users_list | dict2items }}"
+. **Join the RHEL server to the domain.**
++
+Navigate back to the main **Templates** list and launch the **RHEL Join AD** template. When prompted by the survey, provide your unique lab domain:
++
+**{dns_domain}**
++
+image::../assets/images/joindomain.png[Entering the domain in the survey prompt, opts="border"]
++
+Click **Next** to launch the job.
 
-  - name: Create Ansible Admin
-    microsoft.ad.user:
-      identity: "{{ admin_user }}"
-      password: "{{ admin_password }}"
-      firstname: "Ansible AD"
-      surname: "Administrator"
-      state: present
-      groups:
-        set:
-          - Domain Admins
-          - Domain Users
-```
+. **Verify both systems are in the domain.**
++
+Once complete, return to the `windows` tab and refresh the **Active Directory Users and Computers** view. You should now see both the Windows and RHEL systems listed in the domain's Computers container.
++
+image::../assets/images/verify.png[Both servers listed in Active Directory, opts="border"]
 
-### Domain Membership Management
+---
 
-Here's the code for joining servers to the Active Directory domain:
+== Appendix: Code Snippets
 
-```yaml
-tasks:
-  - name: Join host to Domain
-    microsoft.ad.membership:
-      dns_domain_name: "{{ wins_domain }}"
-      hostname: "{{ inventory_hostname }}"
-      domain_admin_user: Administrator
-      domain_admin_password: "{{ safe_password }}"
-      domain_server: "{{ hostname_cleaned }}"
-      state: domain
-      reboot: true
-```
+If you're interested, here are some key code snippets from the playbooks used in this lab.
+
+=== Creating Users, Groups, and OUs in Active Directory
+
+[source,yaml]
+----
+- name: Create a group in an OU
+  microsoft.ad.group:
+    identity: "{{ group_name }}"
+    scope: global
+    path: "{{ ou_path }}"
+    state: present
+
+- name: Create users for lab
+  microsoft.ad.user:
+    identity: "{{ item.key }}"
+    password: "{{ user_password }}"
+    firstname: "{{ item.value.firstname }}"
+    surname: "{{ item.value.surname }}"
+    state: present
+    groups:
+      set:
+      - "{{ group_name }}"
+      - Domain Users
+  loop: "{{ users_list | dict2items }}"
+
+- name: Create Ansible Admin
+  microsoft.ad.user:
+    identity: "{{ admin_user }}"
+    password: "{{ admin_password }}"
+    firstname: "Ansible AD"
+    surname: "Administrator"
+    state: present
+    groups:
+      set:
+      - Domain Admins
+      - Domain Users
+----
+
+=== Joining Servers to the Domain
+
+[source,yaml]
+----
+- name: Join host to Domain
+  microsoft.ad.membership:
+    dns_domain_name: "{{ wins_domain }}"
+    hostname: "{{ inventory_hostname }}"
+    domain_admin_user: Administrator
+    domain_admin_password: "{{ safe_password }}"
+    domain_server: "{{ hostname_cleaned }}"
+    state: domain
+    reboot: true
+----
