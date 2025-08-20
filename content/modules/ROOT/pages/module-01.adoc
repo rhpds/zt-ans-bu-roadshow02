@@ -1,4 +1,9 @@
 # Standardized Environment Deployment with Ansible
+:toc:
+:toc-title: Table of Contents
+:sectnums:
+:icons: font
+
 *Lab Guide - Scenario 02: Standardized Consistency*
 
 
