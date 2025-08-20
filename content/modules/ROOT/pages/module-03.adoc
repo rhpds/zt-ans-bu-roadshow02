@@ -1,5 +1,5 @@
 = Lab Guide: Deploying and Load Balancing a Web Application
-:toc:
+:notoc:
 :toc-title: Table of Contents
 :sectnums:
 :icons: font
