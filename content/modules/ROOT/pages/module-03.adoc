@@ -12,7 +12,7 @@ _A guide to using Ansible Automation Platform to deploy a web application to bot
 
 A ticket update has just arrived!
 
-image::../assets/images/ticket04.png[Support ticket for web app deployment, opts="border"]
+image::ticket04.png[Support ticket for web app deployment, opts="border"]
 
 With the core infrastructure configured, you are finally ready to deploy the application and configure the load balancer before handing the environment over to the development team.
 
@@ -30,7 +30,7 @@ Navigate to your `aap` tab. Go to **Automation Execution** → **Templates** and
 +
 Once the job is complete, navigate to the `webapp-windows` tab in your lab environment to view the running application.
 +
-image::../assets/images/win-webapp.png[Web application running on the Windows server, opts="border"]
+image::win-webapp.png[Web application running on the Windows server, opts="border"]
 
 . **Deploy the web app to the RHEL server.**
 +
@@ -40,7 +40,7 @@ Return to the `aap` tab. Go to **Automation Execution** → **Templates** and la
 +
 Once the job is complete, navigate to the `webapp-rhel` tab to view the running application.
 +
-image::../assets/images/rhel-webapp.png[Web application running on the RHEL server, opts="border"]
+image::rhel-webapp.png[Web application running on the RHEL server, opts="border"]
 
 Great work! Both application servers are now live.
 
@@ -54,7 +54,7 @@ Lastly, you need to configure the HAProxy load balancer to distribute traffic be
 +
 Navigate to the `loadbalancer` tab in your lab environment and refresh the page. You'll see that it is not yet configured.
 +
-image::../assets/images/loadbalancer.png[Default HAProxy statistics page, opts="border"]
+image::loadbalancer.png[Default HAProxy statistics page, opts="border"]
 
 . **Launch the load balancer configuration template.**
 +
@@ -66,7 +66,7 @@ You will be prompted by a survey for a hostname. Enter the FQDN for your RHEL sy
 +
 `node01.{dns_domain}`
 +
-image::../assets/images/hostname.png[Entering a hostname in the survey prompt, opts="border"]
+image::hostname.png[Entering a hostname in the survey prompt, opts="border"]
 +
 Launch the job.
 
