@@ -1,5 +1,5 @@
 = Lab Guide: Standardized System Consistency
-:toc:
+:notoc:
 :toc-title: Table of Contents
 :icons: font
 
