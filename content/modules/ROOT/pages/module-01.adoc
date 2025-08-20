@@ -1,367 +1,218 @@
-# Standardized Environment Deployment with Ansible
-*Lab Guide - Scenario 02: Standardized Consistency*
+= Lab Guide: Standardized System Consistency
+:toc:
+:toc-title: Table of Contents
+:sectnums:
+:icons: font
 
-
-## Introduction
-
-Ready to dive into real automation? You've been tasked with configuring a new environment for multiple teams using standardized, consistent deployments. This scenario demonstrates how Ansible Automation Platform enables different technology teams to collaborate effectively by using pre-built playbooks and templates.
-
-By leveraging workflow templates, job templates, and secure credential management, you'll deploy and configure everything consistently across your infrastructure, minimizing manual intervention and ensuring accuracy.
-
-### Learning Objectives
-
-By the end of this lab, you will be able to:
-
-* **Create and execute workflow templates** that orchestrate multiple job templates
-* **Implement secure credential management** using Ansible Vault
-* **Deploy standardized configurations** across Windows and Linux environments
-* **Manage infrastructure as code** through automated inventory management
+_A guide to using pre-built Ansible playbooks and workflows to deploy and configure environments consistently._
 
 ---
 
-## Lab Environment Setup
+== Scenario: Standardized Consistency
 
-### Access Credentials
+Ready to perform some automation? Your team has been given a new environment to configure. Luckily, various technology teams have already provided playbooks to get the job done. You will use these templates to deploy and configure everything consistently.
 
+First, log into the Ansible Automation Platform instance using the credentials below. Your DNS domain for this lab is **{dns_domain}**.
+
+.Login Credentials
+[cols="1,2a"]
+|===
+| Username | `admin`
+| Password | `ansible123!`
+|===
+
+.Server FQDNs
 [cols="1,1", options="header"]
 |===
-|Username |Password
-
-|admin
-|ansible123!
-|===
-
-### Server Information
-
-Your DNS domain for this lab is: **{dns_domain}**
-
-[cols="1,1", options="header"]
-|===
-|Server |FQDN
-
-|Domain Controller
-|windows.{dns_domain}
-
-|Dev Windows Server
-|dbserver.{dns_domain}
+| Server | FQDN
+| Domain Controller | `windows.{dns_domain}`
+| Dev Windows Server | `dbserver.{dns_domain}`
 |===
 
 ---
 
-## Exercise 1: Baseline Configuration and Applications
+== Baseline Configuration and Applications
 
-### Understanding the Request
+image::../assets/images/ticket01.png[Support ticket for UAT configuration, opts="border"]
 
-[role="border"]
-image::ticket01.png[Support Ticket 001]
+A support ticket has arrived requesting configuration updates for two Windows servers in the UAT environment. The request involves deploying standard applications and making specific registry changes. You will use a workflow template to tie multiple jobs together and address the entire request in a consistent, repeatable process.
 
-You've received a support ticket requesting configuration updates for two Windows servers in the UAT (User Acceptance Testing) environment. The requirements include:
+. **Create the "Windows Apps and Settings" workflow.**
++
+Navigate to **Automation Execution** → **Templates**. Click the **Create template** button and select **Create workflow job template**. Configure it with the following details:
++
+* **Name:** `Windows Apps and Settings`
+* **Organization:** `Default`
+* **Description:** `Required Applications and Settings`
+* **Inventory:** `Windows Servers`
++
+Click **Create workflow template** to open the Workflow Visualizer.
 
-* **Deploy a standard set of applications**
-* **Apply specific registry changes** for environment compliance
-* **Disable automatic updates** to ensure stability
-* **Prevent unintended changes** during testing phases
+. **Add the first node (Registry Keys).**
++
+Click **Add Step** to open the side panel. Configure the first node as follows:
++
+image::../assets/images/workflow_create.png[Workflow Visualizer Add Step button, opts="border"]
++
+* **Node Type:** `Job Template`
+* **Job Template:** `Windows Registry keys`
+* **Convergence:** `Any`
++
+image::../assets/images/sidecar.png[Sidecar panel for adding a workflow node, opts="border"]
++
+Click **Next**, then **Finish**.
 
-To address this request efficiently, you'll create a workflow template that combines multiple job templates into a logical, repeatable process.
+. **Add the second node (Server Applications).**
++
+Hover over the node you just created, click the **`+...+`** menu, and select **Add step and link**. Configure the second node as follows:
++
+image::../assets/images/sidecarworkflow.png[Adding a linked step in the workflow, opts="border"]
++
+* **Node Type:** `Job Template`
+* **Job Template:** `Windows Server Applications`
+* **Status:** `Always run`
+* **Convergence:** `Any`
++
+Click **Next**, then **Finish**. Finally, click **Save** in the top right of the Visualizer to save the entire workflow.
 
-### **Step 1: Create a Workflow Template**
+. **Launch the workflow.**
++
+Navigate back to **Automation Execution** → **Templates** and launch the **Windows Apps and Settings** workflow you just created.
 
-1. **Navigate to Automation Execution → Templates**
-2. **Click Create template**
-3. **Select Create workflow job template**
-
-**Workflow Configuration:**
-
-[cols="1,2", options="header"]
-|===
-|Field |Value
-
-|Name
-|Windows Apps and Settings
-
-|Organization
-|Default
-
-|Description
-|Required Applications and Settings
-
-|Inventory
-|Windows Servers
-|===
-
-4. **Click Create workflow template**
-
-This will open the **Workflow Visualizer** where you'll design your automation workflow.
-
-### **Step 2: Add the First Workflow Step**
-
-1. **In the Workflow Visualizer, click Add Step**
-
-[role="border"]
-image::workflow_create.png[Workflow Creation Interface]
-
-**First Step Configuration:**
-
-[cols="1,2", options="header"]
-|===
-|Field |Value
-
-|Node Type
-|Job Template
-
-|Job Template
-|Windows Registry keys
-
-|Convergence
-|Any
-|===
-
-2. **Click Next and Finish**
-
-### **Step 3: Add the Second Workflow Step**
-
-1. **Select the +...+ menu** on your first step
-2. **Click Add step and link**
-
-[role="border"]
-image::sidecarworkflow.png[Workflow Step Configuration]
-
-**Second Step Configuration:**
-
-[cols="1,2", options="header"]
-|===
-|Field |Value
-
-|Node Type
-|Job Template
-
-|Job Template
-|Windows Server Applications
-
-|Status
-|Always run
-
-|Convergence
-|Any
-|===
-
-3. **Click Next and Finish**
-4. **Select Save** to save the workflow
-
-### **Step 4: Execute the Workflow**
-
-1. **Navigate to Automation Execution → Templates**
-2. **Select the Windows Apps and Settings workflow**
-3. **Click Launch template**
-
-**Monitor the workflow execution** in the output. You'll observe how the workflow orchestrates multiple job templates:
-
-* **First:** Windows Registry keys configuration (completes with green checkmark)
-* **Then:** Windows Server Applications installation (blue spinning arrows while running)
-
-[role="border"]
-image::workflow-action.png[Workflow Execution Status]
-
-[NOTE]
-====
-The complete workflow takes approximately 3-4 minutes. Both Windows servers will be configured with necessary registry changes and applications required by development teams.
-====
-
-### **Step 5: Verify Application Deployment**
-
-1. **Click on the Windows Server Applications icon** in the Visualizer
-2. **Review the job output** to verify deployed applications
-3. **Notice packages like procexp, windirstat, and other development tools** have been installed
-
-[role="border"]
-image::apps.png[Application Installation Results]
+. **Observe the workflow in action.**
++
+In the Output view, you can see the progress as each job template runs in sequence.
++
+image::../assets/images/workflow-action.png[Workflow running in the visualizer, opts="border"]
++
+Once the workflow is complete (after 3-4 minutes), click on the **Windows Server Applications** node and review the job output. You can verify that packages like `procexp` and `windirstat` were installed.
++
+image::../assets/images/apps.png[Job output showing installed applications, opts="border"]
 
 ---
 
-## Exercise 2: Domain Controller Configuration
+== Configuring the Windows Domain Controller
 
-### Understanding the New Request
+image::../assets/images/ticket02.png[Support ticket for new infrastructure, opts="border"]
 
-[role="border"]
-image::ticket02.png[Support Ticket 002]
+A new request has arrived to configure a Windows server as a domain controller. Your Windows SMEs have provided a Job Template to ensure the deployment is consistent and compliant.
 
-A new infrastructure request has arrived from the operations team:
+. **Verify the server's initial state.**
++
+Navigate to the `windows` tab in your lab environment. On the Windows Server desktop, open **Server Manager**, select **Local Server**, and verify that the server is part of the default **WORKGROUP**.
++
+image::../assets/images/workgroup.png[Windows Server in a WORKGROUP, opts="border"]
 
-* **Configure one Windows server** as a domain controller
+. **Add the Vault Credential to the Job Template.**
++
+Navigate to your `aap` tab. Go to **Automation Execution** → **Templates** and edit the **Windows Domain Controller** template. The Windows team has supplied an Ansible Vault to securely store the Active Directory credentials.
++
+[cols="1,1"]
+|===
+| In edit mode, click on **Credentials** and add the **Windows Vault** credential. By using a vault, you can run the job without ever seeing the sensitive passwords directly. | Save the job template after adding the credential.
+|===
++
+image::../assets/images/vault.png[Adding a vault credential to a job template, opts="border"]
 
-* **Prepare another server** for database services
+. **Launch the Job Template.**
++
+Launch the **Windows Domain Controller** job template. As the job runs, it will display the domain it is configuring. Be sure to note this domain name.
++
+image::../assets/images/dnsdomain.png[Job output showing the DNS domain, opts="border"]
++
+NOTE: This process will take several minutes to deploy Active Directory and reboot the system.
 
-* **Ensure compliance** with organizational policies
-
-Your Windows SMEs have provided job templates to deploy this environment consistently.
-
-### **Step 1: Verify Current Server State**
-
-1. **Navigate to the Windows tab**
-2. **Click the Start/Windows button** and open **Server Manager**
-3. **Select Local Server**
-4. **Verify the server is currently part** of the default **WORKGROUP** with limited services
-
-[role="border"]
-image::workgroup.png[Current Server Configuration]
-
-### **Step 2: Configure Secure Credentials**
-
-1. **Navigate to your AAP tab**
-2. **Go to Automation Execution → Templates**
-3. **Edit the Windows Domain Controller template**
-
-Your Windows team has provided an Ansible Vault for secure credential storage. This ensures Active Directory credentials remain encrypted and protected.
-
-**Adding Vault Credentials:**
-
-1. **Click Edit template**
-2. **In the Credentials section, add the Windows Vault credential**
-3. **Save the job template**
-
-[role="border"]
-image::vault.png[Vault Credential Configuration]
-
-[IMPORTANT]
-====
-Ansible Vault credentials ensure sensitive information remains encrypted and secure. You don't have direct access to the credentials, maintaining security best practices.
-====
-
-### **Step 3: Deploy Active Directory**
-
-1. **Launch the job template** using **Launch template**
-2. **Monitor the output** as each task executes
-
-[role="border"]
-image::dnsdomain.png[Domain Configuration Process]
-
-**The template will display the domain/forest information** generated by the environment. Record this domain detail for future reference.
-
-[NOTE]
-====
-This process takes several minutes to deploy Active Directory and reboot the system. After reboot, default Group Policies will also be applied.
-====
-
-### **Step 4: Verify Domain Controller Configuration**
-
-After the system reboots:
-
-1. **Click Start/Windows** and open **Server Manager**
-2. **Verify the domain now reflects** your DNS domain from the template output
-3. **Confirm that DNS and Active Directory services** are running
-
-[role="border"]
-image::domain.png[Active Directory Services Configuration]
+. **Verify the final state.**
++
+Once the Windows server has rebooted, return to the `windows` tab and open **Server Manager**. You should now see that the server is part of the new domain and that the **AD DS** and **DNS** services are running.
++
+image::../assets/images/domain.png[Windows Server as a Domain Controller, opts="border"]
 
 ---
 
-## Exercise 3: RHEL Server Deployment
+== Provisioning a New RHEL Server
 
-### Expanding Infrastructure
+Now that your Windows infrastructure is set, the next step is to deploy a RHEL system for your streaming applications using a standardized template.
 
-With Active Directory configured and Windows servers deployed, the next step involves deploying a RHEL system for streaming applications. Your standardized build templates will streamline this process.
+. **Observe the initial inventory state.**
++
+Navigate to **Automation Execution** → **Infrastructure** → **Inventories** and select the **Video Platform Inventory**. Notice that it currently only contains a `loadbalancer` group.
++
+image::../assets/images/invbefore.png[Inventory before node deployment, opts="border"]
 
-[NOTE]
-====
-This exercise simulates provisioning tasks. In production environments, you would customize instance configurations to meet specific requirements.
-====
+. **Deploy the new node.**
++
+Navigate to **Automation Execution** → **Templates** and launch the **Deploy Node** template. When prompted by the survey, enter the node name `node01` and submit the job.
++
+NOTE: This is a simulated provisioning task. In a real-world scenario, you could customize the instance configuration.
 
-### **Step 1: Review Current Inventory**
-
-1. **Navigate to Automation Execution → Infrastructure → Inventories**
-2. **Examine existing inventories:**
-   * Network environments
-   * Windows environments
-   * Video Platform Inventory (currently contains only a loadbalancer group)
-
-[role="border"]
-image::invbefore.png[Current Inventory State]
-
-**You need to deploy a RHEL system** and configure a webservers group for future use.
-
-### **Step 2: Deploy New Node**
-
-1. **Navigate to Automation Execution → Templates**
-2. **Launch the Deploy Node template**
-3. **When prompted for the node name, enter:** `node01`
-4. **Submit the job**
-
-[TIP]
-====
-In this simulated environment, we use configuration as code to build inventory. With inventory plugins, you could synchronize against an inventory source.
-====
-
-### **Step 3: Verify Inventory Updates**
-
-1. **Once the job completes**, navigate to **Automation Execution → Infrastructure → Inventories**
-2. **Observe the new webservers group** with your new node in the **Video Platform Inventory**
-
-[role="border"]
-image::invafter.png[Updated Inventory State]
+. **Observe the final inventory state.**
++
+Once the job is complete, return to the **Video Platform Inventory**. You will see that a `webservers` group has been added, containing your new `node01`.
++
+image::../assets/images/invafter.png[Inventory after node deployment, opts="border"]
 
 ---
 
-## Code Reference
+== Appendix: Code Snippets
 
-### Windows Application Installation with Chocolatey
+If you're interested, here are some key code snippets from the playbooks used in this lab.
 
-Here's the automation code for installing standardized Windows applications:
+=== Installing Windows Applications with Chocolatey
 
-```yaml
+[source,yaml]
+----
 tasks:
-  - name: Ensure Chocolatey is installed
-    win_chocolatey:
-      name: chocolatey
-      state: present
+- name: Ensure Chocolatey is installed
+  win_chocolatey:
+    name: chocolatey
+    state: present
 
-  - name: Install multiple packages sequentially
-    win_chocolatey:
-      name: '{{ item }}'
-      state: present
-    loop:
-      - procexp
-      - windirstat
-      - 7zip
-      - git
-      - python
+- name: Install multiple packages sequentially
+  win_chocolatey:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - procexp
+    - windirstat
+    - 7zip
+    - git
+    - python
 
-  - name: Check python version
-    ansible.windows.win_command: python --version
-    register: check_python_version
+- name: Check python version
+  ansible.windows.win_command: python --version
+  register: check_python_version
 
-  - name: Show python version
-    ansible.builtin.debug:
-      msg: Python Version is {{ check_python_version.stdout_lines[0] }}
-```
+- name: Show python version
+  ansible.builtin.debug:
+    msg: Python Version is {{ check_python_version.stdout_lines[0] }}
+----
 
-### Domain Controller Promotion
+=== Promoting Windows to a Domain Controller
 
-Here's the code for promoting Windows servers to domain controllers:
+[source,yaml]
+----
+- name: Ensure local Administrator account has a password
+  ansible.windows.win_user:
+    name: "{{ username }}"
+    password: "{{ user_password }}"
 
-```yaml
-tasks:
-  - name: Ensure local Administrator account has a password
-    ansible.windows.win_user:
-      name: "{{ username }}"
-      password: "{{ user_password }}"
+- name: Promote system to a domain Controller
+  microsoft.ad.domain:
+    dns_domain_name: "{{ wins_domain }}"
+    safe_mode_password: "{{ safe_password }}"
+    domain_mode: Win2012R2
+    forest_mode: Win2012R2
+    reboot: true
 
-  - name: Promote system to a domain Controller
-    microsoft.ad.domain:
-      dns_domain_name: "{{ wins_domain }}"
-      safe_mode_password: "{{ safe_password }}"
-      domain_mode: Win2012R2
-      forest_mode: Win2012R2
-      reboot: true
-
-  - name: Firewall rule to allow RDP on TCP port 5986
-    win_firewall_rule:
-      name: WinRM
-      localport: 5986
-      action: allow
-      direction: in
-      protocol: tcp
-      profiles: domain,private,public
-      state: present
-      enabled: yes
-```
-
+- name: Firewall rule to allow RDP on TCP port 5986
+  win_firewall_rule:
+    name: WinRM
+    localport: 5986
+    action: allow
+    direction: in
+    protocol: tcp
+    profiles: domain,private,public
+    state: present
+    enabled: yes
+----
