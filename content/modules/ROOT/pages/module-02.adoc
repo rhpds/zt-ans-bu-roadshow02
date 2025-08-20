@@ -1,4 +1,9 @@
 # Active Directory Domain Management with Ansible
+:notoc:
+:toc-title: Table of Contents
+:sectnums:
+:icons: font
+
 *Lab Guide - Scenario 02: Standardized Consistency (Continued)*
 
 
