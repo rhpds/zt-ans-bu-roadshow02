@@ -1,210 +1,147 @@
-# Web Application Deployment and Load Balancing with Ansible
-*Lab Guide - Scenario 02: Standardized Consistency (Final Phase)*
+= Lab Guide: Deploying and Load Balancing a Web Application
+:toc:
+:toc-title: Table of Contents
+:sectnums:
+:icons: font
 
-
-## Introduction
-
-Excellent progress! You've reached the final phase of your environment deployment. With your infrastructure, domain services, and user accounts configured, it's time to deploy the actual application that will serve your development teams.
-
-[role="border"]
-image::ticket04.png[Final Support Ticket #004 - Application Deployment]
-
-This exercise demonstrates how Ansible can orchestrate complex, multi-tier application deployments across hybrid infrastructure while ensuring high availability through load balancing.
-
-### Learning Objectives
-
-By the end of this lab, you will be able to:
-
-* **Deploy web applications** across both Windows and RHEL platforms using platform-specific configurations
-* **Configure load balancing** with HAProxy for high availability and traffic distribution
-* **Implement service discovery** and dynamic server configuration
-* **Orchestrate complete application stacks** from infrastructure to application deployment
+_A guide to using Ansible Automation Platform to deploy a web application to both Windows and RHEL servers and configure an HAProxy load balancer._
 
 ---
 
-## Lab Environment Setup
+== Scenario: Standardized Consistency
 
-Your DNS domain for this lab is: **[[ Instruqt-Var key="DOMAIN" hostname="control" ]]**
+A ticket update has just arrived!
 
-[NOTE]
-====
-This lab represents the final phase of your environment deployment, building upon all previously configured infrastructure including domain services, user accounts, and server deployments.
-====
+image::../assets/images/ticket04.png[Support ticket for web app deployment, opts="border"]
 
----
-
-## Exercise 1: Multi-Platform Web Application Deployment
-
-You'll deploy the same web application across both Windows and RHEL platforms, demonstrating Ansible's ability to manage heterogeneous environments with consistent results.
-
-### **Step 1: Deploy Windows Web Application**
-
-First, let's deploy the web application on your Windows server using IIS:
-
-1. **Navigate to your AAP tab** and login
-2. **Go to Automation Execution → Templates**
-3. **Launch the Windows Deploy WebApp template**
-
-**This automation will:**
-
-* **Configure IIS web server** on Windows
-* **Deploy application files** and dependencies
-* **Configure proper security** and access permissions
-* **Start necessary Windows services**
-
-### **Step 2: Verify Windows Deployment**
-
-Once the template completes:
-
-1. **Navigate to the webapp-windows tab**
-2. **View the deployed web application**
-
-[role="border"]
-image::win-webapp.png[Windows Web Application Interface]
-
-**The application should be running successfully** on IIS with proper Windows-specific configuration.
-
-### **Step 3: Deploy RHEL Web Application**
-
-Now deploy the same application on your RHEL server using Apache:
-
-1. **Navigate to Automation Execution → Templates**
-2. **Launch the RHEL Deploy WebApp template**
-
-**This automation will:**
-
-* **Configure Apache web server** on RHEL
-* **Clone application source code** from repository
-* **Deploy and configure** application files
-* **Start Apache services** with proper configuration
-
-### **Step 4: Verify RHEL Deployment**
-
-Once the template completes:
-
-1. **Navigate to the webapp-rhel tab**
-2. **View the deployed web application**
-
-[role="border"]
-image::rhel-webapp.png[RHEL Web Application Interface]
-
-[NOTE]
-====
-Both deployments use the same source application but with platform-specific configurations, demonstrating Ansible's ability to abstract deployment complexity while maintaining consistency.
-====
+With the core infrastructure configured, you are finally ready to deploy the application and configure the load balancer before handing the environment over to the development team.
 
 ---
 
-## Exercise 2: Load Balancer Configuration
+== Deploying the Web Application
 
-With both application servers deployed, you need to configure load balancing to distribute traffic and provide high availability.
+Your first task is to deploy the web application to both the Windows (IIS) and RHEL (Apache) servers.
 
-### **Step 1: Verify Current Load Balancer State**
+. **Deploy the web app to the Windows server.**
++
+Navigate to your `aap` tab. Go to **Automation Execution** → **Templates** and launch the **Windows Deploy WebApp** job template. This will configure the Windows server to host the web application on IIS.
 
-1. **Navigate to the loadbalancer tab**
-2. **Refresh the page**
+. **Verify the Windows web app.**
++
+Once the job is complete, navigate to the `webapp-windows` tab in your lab environment to view the running application.
++
+image::../assets/images/win-webapp.png[Web application running on the Windows server, opts="border"]
 
-[role="border"]
-image::loadbalancer.png[Load Balancer Before Configuration]
+. **Deploy the web app to the RHEL server.**
++
+Return to the `aap` tab. Go to **Automation Execution** → **Templates** and launch the **RHEL Deploy WebApp** job template. This will configure the RHEL server to host the same web application on Apache.
 
-**As expected, there's nothing configured yet** - the load balancer needs to be told about your application servers.
+. **Verify the RHEL web app.**
++
+Once the job is complete, navigate to the `webapp-rhel` tab to view the running application.
++
+image::../assets/images/rhel-webapp.png[Web application running on the RHEL server, opts="border"]
 
-### **Step 2: Configure Load Balancer with RHEL Server**
-
-1. **Navigate to Automation Execution → Templates**
-2. **Launch the Configure Loadbalancer template**
-3. **When prompted for hostname, provide:** `node01.{dns_domain}`
-
-[role="border"]
-image::hostname.png[HAProxy Configuration Input]
-
-**This will configure HAProxy** to include your RHEL server in the load balancing pool.
-
-### **Step 3: Add Windows Server to Load Balancer**
-
-1. **Re-run the Configure Loadbalancer template**
-2. **When prompted for hostname, provide:** `dbserver.{dns_domain}`
-
-**The load balancer will now distribute traffic** between both your Windows and RHEL application servers.
-
-### **Step 4: Test Complete Application Stack**
-
-Before final testing:
-
-1. **Verify each individual application server** is responding correctly
-2. **Check the webapp-windows tab** for Windows server availability
-3. **Check the webapp-rhel tab** for RHEL server availability
-4. **Navigate to the loadbalancer tab** to test load-balanced access
-
-**The load balancer will now rotate traffic** between your two application servers, providing redundancy and distributing the load.
-
-[TIP]
-====
-The environment is now ready for handover to your development teams! They have a fully redundant, load-balanced web application running across hybrid infrastructure.
-====
+Great work! Both application servers are now live.
 
 ---
 
-## Code Reference
+== Configuring the Load Balancer
 
-### HAProxy Load Balancer Configuration
+Lastly, you need to configure the HAProxy load balancer to distribute traffic between your two new web servers.
 
-Here's the automation code for configuring HAProxy load balancing:
+. **Check the initial load balancer state.**
++
+Navigate to the `loadbalancer` tab in your lab environment and refresh the page. You'll see that it is not yet configured.
++
+image::../assets/images/loadbalancer.png[Default HAProxy statistics page, opts="border"]
 
-```yaml
-tasks:
-  - name: Resolve DNS server hostname to IP
-    set_fact:
-      host_ip: "{{ lookup('dig', host) }}"
+. **Launch the load balancer configuration template.**
++
+Return to the `aap` tab. Go to **Automation Execution** → **Templates** and launch the **Configure Loadbalancer** job template.
 
-  - name: Add static hosts to load balancer
-    ansible.builtin.lineinfile:
-      path: /etc/haproxy/haproxy.cfg
-      line: "server static-{{ host}} {{ host_ip }}:80 check"
-      insertafter: '^## STATIC CONFIG ANSIBLE'
-      state: present
+. **Add the RHEL server to the load balancer.**
++
+You will be prompted by a survey for a hostname. Enter the FQDN for your RHEL system:
++
+`node01.{dns_domain}`
++
+image::../assets/images/hostname.png[Entering a hostname in the survey prompt, opts="border"]
++
+Launch the job.
 
-  - name: Add webapp hosts to load balancer
-    ansible.builtin.lineinfile:
-      path: /etc/haproxy/haproxy.cfg
-      line: "server webapp-{{ host }} {{ host_ip }}:80 check"
-      insertafter: '^## APP CONFIG ANSIBLE'
-      state: present
-    notify:
-      - restart haproxy
+. **Add the Windows server to the load balancer.**
++
+**Re-run the `Configure Loadbalancer` job template a second time.** When prompted by the survey, enter the FQDN for your Windows system:
++
+`dbserver.{dns_domain}`
++
+Launch the job again.
+
+. **Verify the final configuration.**
++
+After both jobs have completed, you can refresh the `loadbalancer` tab. You should now see traffic being successfully distributed between both the Windows and RHEL servers. The environment is now ready to be handed over!
+
+---
+
+== Appendix: Code Snippets
+
+If you're interested, here are some key code snippets from the playbooks used in this lab.
+
+=== Modifying the HAProxy Configuration
+
+[source,yaml]
+----
+- name: Resolve DNS server hostname to IP
+  set_fact:
+    host_ip: "{{ lookup('dig', host) }}"
+
+- name: Add static hosts to load balancer
+  ansible.builtin.lineinfile:
+    path: /etc/haproxy/haproxy.cfg
+    line: "server static-{{ host}} {{ host_ip }}:80 check"
+    insertafter: '^## STATIC CONFIG ANSIBLE'
+    state: present
+
+- name: Add webapp hosts to load balancer
+  ansible.builtin.lineinfile:
+    path: /etc/haproxy/haproxy.cfg
+    line: "server webapp-{{ host }} {{ host_ip }}:80 check"
+    insertafter: '^## APP CONFIG ANSIBLE'
+    state: present
+  notify:
+    - restart haproxy
 
 handlers:
   - name: restart haproxy
     service:
       name: haproxy
       state: restarted
-```
+----
 
-### RHEL Web Application Deployment
+=== Deploying the Webapp on RHEL
 
-Here's the code for deploying web applications on RHEL systems:
+[source,yaml]
+----
+- name: clone a git repo
+  ansible.builtin.git:
+    repo: https://github.com/nmartins0611/aap25-roadshow-content.git
+    dest: /tmp/repo
 
-```yaml
-tasks:
-  - name: clone a git repo
-    ansible.builtin.git:
-      repo: https://github.com/nmartins0611/aap25-roadshow-content.git
-      dest: /tmp/repo
+- name: copy all files from one directory to another
+  ansible.builtin.copy:
+    src: /tmp/repo/lab-resources/
+    dest: /var/www/html
+    remote_src: true
 
-  - name: copy all files from one directory to another
-    ansible.builtin.copy:
-      src: /tmp/repo/lab-resources/
-      dest: /var/www/html
-      remote_src: true
+- name: Tag the page
+  ansible.builtin.lineinfile:
+    path: /var/www/html/index.html
+    line: "This is running on the RHEL Host"
+    insertafter: "<p>&copy; 2024 TMM - Where comedy lives. All rights reserved.</p>"
 
-  - name: Tag the page
-    ansible.builtin.lineinfile:
-      path: /var/www/html/index.html
-      line: "This is running on the RHEL Host"
-      insertafter: "<p>&copy; 2024 TMM - Where comedy lives. All rights reserved.</p>"
-
-  - name: Start httpd service
-    ansible.builtin.service:
-      name: httpd
-      state: started
-```
+- name: Start httpd service
+  ansible.builtin.service:
+    name: httpd
+    state: started
+----
