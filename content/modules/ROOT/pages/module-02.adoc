@@ -75,7 +75,7 @@ image::enablesurvey.png[Enabling the survey with the toggle switch, opts="border
 +
 Navigate back to the main **Templates** list and launch the **RHEL Join AD** template. When prompted by the survey, provide your unique lab domain:
 +
-**{dns_domain}**
+lab.**{dns_domain}**
 +
 image::joindomain.png[Entering the domain in the survey prompt, opts="border"]
 +
