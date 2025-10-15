@@ -24,8 +24,8 @@ First, log into the Ansible Automation Platform instance using the credentials b
 [cols="1,1", options="header"]
 |===
 | Server | FQDN
-| Domain Controller | `windows.{dns_domain}`
-| Dev Windows Server | `dbserver.{dns_domain}`
+| Domain Controller | `windows.lab.{dns_domain}`
+| Dev Windows Server | `dbserver.lab.{dns_domain}`
 |===
 
 ---
