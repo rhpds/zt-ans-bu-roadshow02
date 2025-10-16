@@ -11,7 +11,7 @@ _A guide to using pre-built Ansible playbooks and workflows to deploy and config
 
 Ready to perform some automation? Your team has been given a new environment to configure. Luckily, various technology teams have already provided playbooks to get the job done. You will use these templates to deploy and configure everything consistently.
 
-First, log into the Ansible Automation Platform instance using the credentials below. Your DNS domain for this lab is **{dns_domain}**.
+First, log into the Ansible Automation Platform instance using the credentials below. Your DNS domain for this lab is **lab.{dns_domain}**.
 
 .Login Credentials
 [cols="1,2a"]
@@ -24,8 +24,8 @@ First, log into the Ansible Automation Platform instance using the credentials b
 [cols="1,1", options="header"]
 |===
 | Server | FQDN
-| Domain Controller | `windows.{dns_domain}`
-| Dev Windows Server | `dbserver.{dns_domain}`
+| Domain Controller | `windows.lab.{dns_domain}`
+| Dev Windows Server | `dbserver.lab.{dns_domain}`
 |===
 
 ---
