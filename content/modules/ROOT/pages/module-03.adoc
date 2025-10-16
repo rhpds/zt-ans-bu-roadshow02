@@ -64,7 +64,7 @@ Return to the `aap` tab. Go to **Automation Execution** → **Templates** and la
 +
 You will be prompted by a survey for a hostname. Enter the FQDN for your RHEL system:
 +
-`node01.{dns_domain}`
+`node01.lab.{dns_domain}`
 +
 image::hostname.png[Entering a hostname in the survey prompt, opts="border"]
 +
@@ -74,7 +74,7 @@ Launch the job.
 +
 **Re-run the `Configure Loadbalancer` job template a second time.** When prompted by the survey, enter the FQDN for your Windows system:
 +
-`dbserver.{dns_domain}`
+`dbserver.lab.{dns_domain}`
 +
 Launch the job again.
 
