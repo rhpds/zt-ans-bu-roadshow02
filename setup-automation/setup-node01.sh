@@ -10,7 +10,6 @@ echo "192.168.1.11 node01.lab node01" >> /etc/hosts
 echo "192.168.1.100 windows.lab windows" >> /etc/hosts
 echo "192.168.1.101 dbserver.lab dbserver" >> /etc/hosts
 
-
 retry() {
     for i in {1..3}; do
         echo "Attempt $i: $2"
@@ -25,8 +24,14 @@ retry() {
 
 retry "curl -k -L https://${SATELLITE_URL}/pub/katello-server-ca.crt -o /etc/pki/ca-trust/source/anchors/${SATELLITE_URL}.ca.crt"
 retry "update-ca-trust"
-retry "rpm -Uhv https://${SATELLITE_URL}/pub/katello-ca-consumer-latest.noarch.rpm"
-retry "subscription-manager register --org=${SATELLITE_ORG} --activationkey=${SATELLITE_ACTIVATIONKEY}"
+KATELLO_INSTALLED=$(rpm -qa | grep -c katello)
+if [ $KATELLO_INSTALLED -eq 0 ]; then
+  retry "rpm -Uhv https://${SATELLITE_URL}/pub/katello-ca-consumer-latest.noarch.rpm"
+fi
+subscription-manager status
+if [ $? -ne 0 ]; then
+    retry "subscription-manager register --org=${SATELLITE_ORG} --activationkey=${SATELLITE_ACTIVATIONKEY}"
+fi
 retry "dnf install samba-common-tools realmd oddjob oddjob-mkhomedir sssd adcli krb5-workstation httpd git -y"
 
 # curl -k  -L https://${SATELLITE_URL}/pub/katello-server-ca.crt -o /etc/pki/ca-trust/source/anchors/${SATELLITE_URL}.ca.crt
