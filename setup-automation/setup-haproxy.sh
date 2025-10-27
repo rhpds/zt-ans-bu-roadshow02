@@ -21,7 +21,7 @@ subscription-manager status
 if [ $? -ne 0 ]; then
     retry "subscription-manager register --org=${SATELLITE_ORG} --activationkey=${SATELLITE_ACTIVATIONKEY}"
 fi
-retry "dnf install install haproxy git -y"
+retry "dnf install haproxy git -y"
 
 setenforce 0
 
