@@ -140,7 +140,7 @@ virtualmachines:
           -----END CERTIFICATE-----
   - name: "node01"
     image: "rhel-9.5"
-    memory: "2G"
+    memory: "8G"
     cores: 2
     image_size: "30Gi"
     tags:
@@ -174,7 +174,7 @@ virtualmachines:
         
   - name: "haproxy"
     image: "rhel-9.5"
-    memory: "2G"
+    memory: "8G"
     cores: 2
     image_size: "30Gi"
     tags:
