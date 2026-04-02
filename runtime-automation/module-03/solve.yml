@@ -1,0 +1,166 @@
+---
+# solve.yml — Module 03: Web Application Deployment and Load Balancing
+
+# Resolve DNS domain for loadbalancer hostnames
+- name: Get DNS domain
+  ansible.builtin.set_fact:
+    dns_domain: "{{ lookup('pipe', 'grep ^search /etc/resolv.conf | awk \"{print $2}\"') | default('') }}"
+
+# Step 1: Launch "Windows Deploy WebApp"
+- name: Get Windows Deploy WebApp template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Windows+Deploy+WebApp"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wdwa
+
+- name: Launch Windows Deploy WebApp
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_wdwa.json.results[0].id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body: {}
+    status_code: [200, 201]
+  register: r_launch_wdwa
+
+- name: Wait for Windows Deploy WebApp
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_wdwa.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 10
+
+- name: Warn if Windows Deploy WebApp failed
+  ansible.builtin.debug:
+    msg: "WARNING: Windows Deploy WebApp finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'
+
+# Step 2: Launch "RHEL Deploy WebApp"
+- name: Get RHEL Deploy WebApp template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=RHEL+Deploy+WebApp"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_rdwa
+
+- name: Launch RHEL Deploy WebApp
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_rdwa.json.results[0].id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body: {}
+    status_code: [200, 201]
+  register: r_launch_rdwa
+
+- name: Wait for RHEL Deploy WebApp
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_rdwa.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 10
+
+- name: Warn if RHEL Deploy WebApp failed
+  ansible.builtin.debug:
+    msg: "WARNING: RHEL Deploy WebApp finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'
+
+# Step 3: Launch "Configure Loadbalancer" with node01
+- name: Get Configure Loadbalancer template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Configure+Loadbalancer"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_clb
+
+- name: Set loadbalancer template ID
+  ansible.builtin.set_fact:
+    clb_id: "{{ r_clb.json.results[0].id }}"
+
+- name: Launch Configure Loadbalancer (node01)
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ clb_id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      extra_vars:
+        host: "node01.{{ dns_domain }}"
+    status_code: [200, 201]
+  register: r_launch_clb1
+
+- name: Wait for Configure Loadbalancer (node01)
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_clb1.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 10
+
+- name: Warn if Configure Loadbalancer (node01) failed
+  ansible.builtin.debug:
+    msg: "WARNING: Configure Loadbalancer (node01) finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'
+
+# Step 4: Launch "Configure Loadbalancer" with dbserver
+- name: Launch Configure Loadbalancer (dbserver)
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ clb_id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      extra_vars:
+        host: "dbserver.{{ dns_domain }}"
+    status_code: [200, 201]
+  register: r_launch_clb2
+
+- name: Wait for Configure Loadbalancer (dbserver)
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_clb2.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 10
+
+- name: Warn if Configure Loadbalancer (dbserver) failed
+  ansible.builtin.debug:
+    msg: "WARNING: Configure Loadbalancer (dbserver) finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'

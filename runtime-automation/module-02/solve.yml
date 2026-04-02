@@ -1,0 +1,188 @@
+---
+# solve.yml — Module 02: Active Directory Domain Management
+
+# Resolve DNS domain for RHEL Join AD
+- name: Get DNS domain
+  ansible.builtin.set_fact:
+    dns_domain: "{{ lookup('pipe', 'grep ^search /etc/resolv.conf | awk \"{print $2}\"') | default('') }}"
+
+# Step 1: Launch "Windows Users and OU" with survey inputs
+- name: Get Windows Users and OU template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Windows+Users+and+OU"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wuo
+
+- name: Launch Windows Users and OU
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_wuo.json.results[0].id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      extra_vars:
+        ou_name: "Testing"
+        group_name: "TMM-Dev"
+    status_code: [200, 201]
+  register: r_launch_wuo
+
+- name: Wait for Windows Users and OU
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_wuo.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 10
+
+- name: Warn if Windows Users and OU failed
+  ansible.builtin.debug:
+    msg: "WARNING: Windows Users and OU finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'
+
+# Step 2: Launch "Windows Join Domain"
+- name: Get Windows Join Domain template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Windows+Join+Domain"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wjd
+
+- name: Launch Windows Join Domain
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_wjd.json.results[0].id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body: {}
+    status_code: [200, 201]
+  register: r_launch_wjd
+
+- name: Wait for Windows Join Domain
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_wjd.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 15
+
+- name: Warn if Windows Join Domain failed
+  ansible.builtin.debug:
+    msg: "WARNING: Windows Join Domain finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'
+
+# Step 3: Create survey on "RHEL Join AD" template
+- name: Get RHEL Join AD template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=RHEL+Join+AD"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_rjad
+
+- name: Set RHEL Join AD ID
+  ansible.builtin.set_fact:
+    rjad_id: "{{ r_rjad.json.results[0].id }}"
+
+- name: Check if survey already exists
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ rjad_id }}/survey_spec/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_survey
+
+- name: Set survey exists fact
+  ansible.builtin.set_fact:
+    survey_exists: "{{ r_survey.json.spec | default([]) | selectattr('variable', 'equalto', 'domain') | list | length > 0 }}"
+
+- name: Create survey on RHEL Join AD
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ rjad_id }}/survey_spec/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      name: ""
+      description: ""
+      spec:
+        - question_name: "Please provide the domain to join"
+          question_description: "Domain/Forest information"
+          required: true
+          type: "text"
+          variable: "domain"
+          min: 0
+          max: 1024
+          default: ""
+    status_code: [200, 201]
+  when: not survey_exists | bool
+
+# Step 4: Enable the survey
+- name: Enable survey on RHEL Join AD
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ rjad_id }}/"
+    method: PATCH
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      survey_enabled: true
+    status_code: [200]
+
+# Step 5: Launch "RHEL Join AD" with domain
+- name: Launch RHEL Join AD
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ rjad_id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      extra_vars:
+        domain: "{{ dns_domain }}"
+    status_code: [200, 201]
+  register: r_launch_rjad
+
+- name: Wait for RHEL Join AD
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_rjad.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 10
+
+- name: Warn if RHEL Join AD failed
+  ansible.builtin.debug:
+    msg: "WARNING: RHEL Join AD finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'

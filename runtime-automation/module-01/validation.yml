@@ -1,0 +1,110 @@
+---
+# validation.yml — Module 01: Standardized Environment Deployment
+
+# Check workflow exists
+- name: Get workflow template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/?name=Windows+Apps+and+Settings"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wf
+
+# Check workflow launched successfully
+- name: Get workflow jobs
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/{{ r_wf.json.results[0].id }}/workflow_jobs/?order_by=-finished&page_size=10"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wf_jobs
+  when: r_wf.json.count > 0
+
+# Check Windows Domain Controller template has vault credential
+- name: Get Windows Domain Controller template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Windows+Domain+Controller"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wdc
+
+- name: Get WDC template details
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_wdc.json.results[0].id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wdc_detail
+  when: r_wdc.json.count > 0
+
+# Check WDC job ran successfully
+- name: Get WDC jobs
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_wdc.json.results[0].id }}/jobs/?order_by=-finished&page_size=10"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wdc_jobs
+  when: r_wdc.json.count > 0
+
+# Check Deploy Node ran successfully
+- name: Get Deploy Node template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Deploy+Node"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_dn
+
+- name: Get Deploy Node jobs
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_dn.json.results[0].id }}/jobs/?order_by=-finished&page_size=10"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_dn_jobs
+  when: r_dn.json.count > 0
+
+# Evaluate results
+- name: Set validation results
+  ansible.builtin.set_fact:
+    wf_exists_ok: "{{ r_wf.json.count > 0 }}"
+    wf_launched_ok: "{{ r_wf.json.count > 0 and (r_wf_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
+    vault_ok: "{{ r_wdc.json.count > 0 and (r_wdc_detail.json.summary_fields.credentials | default([]) | selectattr('name', 'search', '(?i)vault') | list | length > 0) }}"
+    wdc_ok: "{{ r_wdc.json.count > 0 and (r_wdc_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
+    dn_ok: "{{ r_dn.json.count > 0 and (r_dn_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
+
+- name: Set validation output
+  ansible.builtin.set_fact:
+    validation_output: |
+      Module 1 Validation
+      ===================
+      {{ '[OK]' if wf_exists_ok | bool else '[X] ' }} Workflow 'Windows Apps and Settings' exists
+      {{ '[OK]' if wf_launched_ok | bool else '[X] ' }} Workflow launched successfully
+      {{ '[OK]' if vault_ok | bool else '[X] ' }} Windows Domain Controller has vault credential
+      {{ '[OK]' if wdc_ok | bool else '[X] ' }} Windows Domain Controller job launched
+      {{ '[OK]' if dn_ok | bool else '[X] ' }} Deploy Node job launched
+    validation_passed: >-
+      {{ wf_exists_ok | bool and wf_launched_ok | bool and vault_ok | bool and wdc_ok | bool and dn_ok | bool }}
+
+- name: Write failure details
+  ansible.builtin.copy:
+    content: "{{ validation_output }}"
+    dest: "{{ job_info_dir }}/validation_failure.out"
+  delegate_to: localhost
+  when:
+    - job_info_dir is defined
+    - not validation_passed | bool
+
+- name: Fail if not passed
+  ansible.builtin.fail:
+    msg: "Complete the missing tasks and try again."
+  when: not validation_passed | bool

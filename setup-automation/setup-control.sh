@@ -1,5 +1,5 @@
 #!/bin/bash
-su rhel -c 'ssh-keygen -f /home/rhel/.ssh/id_rsa -q -N ""'
+su rhel -c '[ -f /home/rhel/.ssh/id_rsa ] || ssh-keygen -f /home/rhel/.ssh/id_rsa -q -N ""'
 nmcli connection add type ethernet con-name enp2s0 ifname enp2s0 ipv4.addresses 192.168.1.10/24 ipv4.method manual connection.autoconnect yes
 nmcli connection up enp2s0
 echo "192.168.1.10 control.lab control" >> /etc/hosts
@@ -701,4 +701,6 @@ tee /tmp/setup.yml << EOF
 EOF
 
 
-ANSIBLE_COLLECTIONS_PATH=/root/.ansible/collections/ansible_collections/ ansible-playbook -i /tmp/inventory /tmp/setup.yml
+export ANSIBLE_LOCALHOST_WARNING=False
+export ANSIBLE_INVENTORY_UNPARSED_WARNING=False
+ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml

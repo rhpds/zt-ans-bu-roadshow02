@@ -1,0 +1,94 @@
+---
+# validation.yml — Module 03: Web Application Deployment and Load Balancing
+
+# Check Windows Deploy WebApp job
+- name: Get Windows Deploy WebApp template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Windows+Deploy+WebApp"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wdwa
+
+- name: Get Windows Deploy WebApp jobs
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_wdwa.json.results[0].id }}/jobs/?order_by=-finished&page_size=10"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wdwa_jobs
+  when: r_wdwa.json.count > 0
+
+# Check RHEL Deploy WebApp job
+- name: Get RHEL Deploy WebApp template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=RHEL+Deploy+WebApp"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_rdwa
+
+- name: Get RHEL Deploy WebApp jobs
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_rdwa.json.results[0].id }}/jobs/?order_by=-finished&page_size=10"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_rdwa_jobs
+  when: r_rdwa.json.count > 0
+
+# Check Configure Loadbalancer ran at least twice
+- name: Get Configure Loadbalancer template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Configure+Loadbalancer"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_clb
+
+- name: Get Configure Loadbalancer jobs
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_clb.json.results[0].id }}/jobs/?order_by=-finished&page_size=20"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_clb_jobs
+  when: r_clb.json.count > 0
+
+# Evaluate results
+- name: Set validation results
+  ansible.builtin.set_fact:
+    wdwa_ok: "{{ r_wdwa.json.count > 0 and (r_wdwa_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
+    rdwa_ok: "{{ r_rdwa.json.count > 0 and (r_rdwa_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
+    clb_ok: "{{ r_clb.json.count > 0 and (r_clb_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length >= 2) }}"
+
+- name: Set validation output
+  ansible.builtin.set_fact:
+    validation_output: |
+      Module 3 Validation
+      ===================
+      {{ '[OK]' if wdwa_ok | bool else '[X] ' }} Windows Deploy WebApp job launched
+      {{ '[OK]' if rdwa_ok | bool else '[X] ' }} RHEL Deploy WebApp job launched
+      {{ '[OK]' if clb_ok | bool else '[X] ' }} Configure Loadbalancer launched at least twice
+    validation_passed: >-
+      {{ wdwa_ok | bool and rdwa_ok | bool and clb_ok | bool }}
+
+- name: Write failure details
+  ansible.builtin.copy:
+    content: "{{ validation_output }}"
+    dest: "{{ job_info_dir }}/validation_failure.out"
+  delegate_to: localhost
+  when:
+    - job_info_dir is defined
+    - not validation_passed | bool
+
+- name: Fail if not passed
+  ansible.builtin.fail:
+    msg: "Complete the missing tasks and try again."
+  when: not validation_passed | bool

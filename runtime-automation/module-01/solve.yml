@@ -1,0 +1,283 @@
+---
+# solve.yml — Module 01: Standardized Environment Deployment
+
+# Step 1: Check if workflow "Windows Apps and Settings" exists
+- name: Check for existing workflow
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/?name=Windows+Apps+and+Settings"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wf_check
+
+- name: Set workflow exists fact
+  ansible.builtin.set_fact:
+    wf_exists: "{{ r_wf_check.json.count > 0 }}"
+    wf_id: "{{ r_wf_check.json.results[0].id | default('') }}"
+
+# Create workflow if it doesn't exist
+- name: Get Windows Servers inventory
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/inventories/?name=Windows+Servers"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_win_inv
+  when: not wf_exists | bool
+
+- name: Get Default organization
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/organizations/?name=Default"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_org
+  when: not wf_exists | bool
+
+- name: Create workflow template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      name: "Windows Apps and Settings"
+      description: "Required Applications and Settings"
+      organization: "{{ r_org.json.results[0].id }}"
+      inventory: "{{ r_win_inv.json.results[0].id }}"
+    status_code: [200, 201]
+  register: r_wf_create
+  when: not wf_exists | bool
+
+- name: Set workflow ID from creation
+  ansible.builtin.set_fact:
+    wf_id: "{{ r_wf_create.json.id }}"
+  when: not wf_exists | bool
+
+# Add workflow nodes
+- name: Get Windows Registry keys template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Windows+Registry+keys"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_reg
+  when: not wf_exists | bool
+
+- name: Get Windows Server Applications template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Windows+Server+Applications"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_apps
+  when: not wf_exists | bool
+
+- name: Add first workflow node (Registry keys)
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/{{ wf_id }}/workflow_nodes/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      unified_job_template: "{{ r_reg.json.results[0].id }}"
+      all_parents_must_converge: false
+    status_code: [200, 201]
+  register: r_node1
+  when: not wf_exists | bool
+
+- name: Add second workflow node (Server Applications)
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/{{ wf_id }}/workflow_nodes/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      unified_job_template: "{{ r_apps.json.results[0].id }}"
+      all_parents_must_converge: false
+    status_code: [200, 201]
+  register: r_node2
+  when: not wf_exists | bool
+
+- name: Link nodes (Registry -> Applications, always)
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_template_nodes/{{ r_node1.json.id }}/always_nodes/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      id: "{{ r_node2.json.id }}"
+    status_code: [200, 201, 204]
+  when: not wf_exists | bool
+
+# Step 2: Launch the workflow
+- name: Launch workflow
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/{{ wf_id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body: {}
+    status_code: [200, 201]
+  register: r_launch_wf
+
+- name: Wait for workflow
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_jobs/{{ r_launch_wf.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 15
+
+- name: Warn if workflow failed
+  ansible.builtin.debug:
+    msg: "WARNING: Workflow finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'
+
+# Step 3: Add vault credential to Windows Domain Controller
+- name: Get Windows Domain Controller template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Windows+Domain+Controller"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wdc
+
+- name: Set WDC template ID
+  ansible.builtin.set_fact:
+    wdc_id: "{{ r_wdc.json.results[0].id }}"
+
+- name: Check if vault credential already attached
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ wdc_id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wdc_detail
+
+- name: Set vault attached fact
+  ansible.builtin.set_fact:
+    vault_attached: "{{ r_wdc_detail.json.summary_fields.credentials | selectattr('name', 'search', '(?i)vault') | list | length > 0 }}"
+
+- name: Get Windows Vault credential
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/credentials/?name=Windows+Vault"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_vault_cred
+  when: not vault_attached | bool
+
+- name: Attach vault credential to WDC template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ wdc_id }}/credentials/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      id: "{{ r_vault_cred.json.results[0].id }}"
+    status_code: [200, 201, 204]
+  when: not vault_attached | bool
+
+# Step 4: Launch Windows Domain Controller
+- name: Launch Windows Domain Controller
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ wdc_id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body: {}
+    status_code: [200, 201]
+  register: r_launch_wdc
+
+- name: Wait for Windows Domain Controller
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_wdc.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 15
+
+- name: Warn if Windows Domain Controller failed
+  ansible.builtin.debug:
+    msg: "WARNING: Windows Domain Controller finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'
+
+# Step 5: Launch Deploy Node with node_name=node01
+- name: Get Deploy Node template
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/?name=Deploy+Node"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_dn
+
+- name: Launch Deploy Node
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/job_templates/{{ r_dn.json.results[0].id }}/launch/"
+    method: POST
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+    body:
+      extra_vars:
+        node_name: "node01"
+    status_code: [200, 201]
+  register: r_launch_dn
+
+- name: Wait for Deploy Node
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/jobs/{{ r_launch_dn.json.id }}/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_job
+  until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
+  retries: 60
+  delay: 10
+
+- name: Warn if Deploy Node failed
+  ansible.builtin.debug:
+    msg: "WARNING: Deploy Node finished with status: {{ r_job.json.status }}"
+  when: r_job.json.status != 'successful'

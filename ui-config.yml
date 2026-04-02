@@ -6,13 +6,22 @@ antora:
   modules:
     - name: module-01
       label: "Setting up the foundation"
-      solveButton: false
+      solveButton: true
+      scripts:
+        - solve
+        - validation
     - name: module-02
       label: "Domains for the multidomain"
-      solveButton: false
+      solveButton: true
+      scripts:
+        - solve
+        - validation
     - name: module-03
       label: "Deploy the WebApps!"
-      solveButton: false
+      solveButton: true
+      scripts:
+        - solve
+        - validation
 
 tabs:
   - name: aap

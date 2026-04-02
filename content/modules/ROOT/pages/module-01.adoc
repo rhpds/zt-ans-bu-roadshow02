@@ -41,8 +41,8 @@ A support ticket has arrived requesting configuration updates for two Windows se
 Navigate to **Automation Execution** → **Templates**. Click the **Create template** button and select **Create workflow job template**. Configure it with the following details:
 +
 * **Name:** `Windows Apps and Settings`
-* **Organization:** `Default`
 * **Description:** `Required Applications and Settings`
+* **Organization:** `Default`
 * **Inventory:** `Windows Servers`
 +
 Click **Create workflow template** to open the Workflow Visualizer.
