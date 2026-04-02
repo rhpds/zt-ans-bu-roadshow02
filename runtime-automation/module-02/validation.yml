@@ -10,6 +10,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wuo
+  failed_when: false
 
 - name: Get Windows Users and OU jobs
   ansible.builtin.uri:
@@ -19,7 +20,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wuo_jobs
-  when: r_wuo.json.count > 0
+  failed_when: false
+  when: r_wuo.json is defined and r_wuo.json.count | default(0) > 0
 
 # Check Windows Join Domain job
 - name: Get Windows Join Domain template
@@ -30,6 +32,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wjd
+  failed_when: false
 
 - name: Get Windows Join Domain jobs
   ansible.builtin.uri:
@@ -39,7 +42,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wjd_jobs
-  when: r_wjd.json.count > 0
+  failed_when: false
+  when: r_wjd.json is defined and r_wjd.json.count | default(0) > 0
 
 # Check RHEL Join AD survey and job
 - name: Get RHEL Join AD template
@@ -50,6 +54,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_rjad
+  failed_when: false
 
 - name: Get RHEL Join AD survey spec
   ansible.builtin.uri:
@@ -59,7 +64,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_rjad_survey
-  when: r_rjad.json.count > 0
+  failed_when: false
+  when: r_rjad.json is defined and r_rjad.json.count | default(0) > 0
 
 - name: Get RHEL Join AD template details
   ansible.builtin.uri:
@@ -69,7 +75,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_rjad_detail
-  when: r_rjad.json.count > 0
+  failed_when: false
+  when: r_rjad.json is defined and r_rjad.json.count | default(0) > 0
 
 - name: Get RHEL Join AD jobs
   ansible.builtin.uri:
@@ -79,16 +86,32 @@
     force_basic_auth: true
     validate_certs: false
   register: r_rjad_jobs
-  when: r_rjad.json.count > 0
+  failed_when: false
+  when: r_rjad.json is defined and r_rjad.json.count | default(0) > 0
 
 # Evaluate results
 - name: Set validation results
   ansible.builtin.set_fact:
-    wuo_ok: "{{ r_wuo.json.count > 0 and (r_wuo_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
-    wjd_ok: "{{ r_wjd.json.count > 0 and (r_wjd_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
-    survey_ok: "{{ r_rjad.json.count > 0 and (r_rjad_survey.json.spec | default([]) | selectattr('variable', 'equalto', 'domain') | list | length > 0) }}"
-    survey_enabled_ok: "{{ r_rjad.json.count > 0 and (r_rjad_detail.json.survey_enabled | default(false)) }}"
-    rjad_ok: "{{ r_rjad.json.count > 0 and (r_rjad_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
+    wuo_ok: >-
+      {{ r_wuo.json is defined and r_wuo.json.count | default(0) > 0
+         and r_wuo_jobs is defined and r_wuo_jobs is not skipped
+         and (r_wuo_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}
+    wjd_ok: >-
+      {{ r_wjd.json is defined and r_wjd.json.count | default(0) > 0
+         and r_wjd_jobs is defined and r_wjd_jobs is not skipped
+         and (r_wjd_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}
+    survey_ok: >-
+      {{ r_rjad.json is defined and r_rjad.json.count | default(0) > 0
+         and r_rjad_survey is defined and r_rjad_survey is not skipped
+         and (r_rjad_survey.json.spec | default([]) | selectattr('variable', 'equalto', 'domain') | list | length > 0) }}
+    survey_enabled_ok: >-
+      {{ r_rjad.json is defined and r_rjad.json.count | default(0) > 0
+         and r_rjad_detail is defined and r_rjad_detail is not skipped
+         and (r_rjad_detail.json.survey_enabled | default(false)) }}
+    rjad_ok: >-
+      {{ r_rjad.json is defined and r_rjad.json.count | default(0) > 0
+         and r_rjad_jobs is defined and r_rjad_jobs is not skipped
+         and (r_rjad_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}
 
 - name: Set validation output
   ansible.builtin.set_fact:
@@ -103,6 +126,10 @@
     validation_passed: >-
       {{ wuo_ok | bool and wjd_ok | bool and survey_ok | bool and survey_enabled_ok | bool and rjad_ok | bool }}
 
+- name: Show validation results
+  ansible.builtin.debug:
+    msg: "{{ validation_output }}"
+
 - name: Write failure details
   ansible.builtin.copy:
     content: "{{ validation_output }}"
@@ -114,5 +141,5 @@
 
 - name: Fail if not passed
   ansible.builtin.fail:
-    msg: "Complete the missing tasks and try again."
+    msg: "{{ validation_output }}"
   when: not validation_passed | bool

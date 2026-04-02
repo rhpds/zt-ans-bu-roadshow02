@@ -10,6 +10,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wdwa
+  failed_when: false
 
 - name: Get Windows Deploy WebApp jobs
   ansible.builtin.uri:
@@ -19,7 +20,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wdwa_jobs
-  when: r_wdwa.json.count > 0
+  failed_when: false
+  when: r_wdwa.json is defined and r_wdwa.json.count | default(0) > 0
 
 # Check RHEL Deploy WebApp job
 - name: Get RHEL Deploy WebApp template
@@ -30,6 +32,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_rdwa
+  failed_when: false
 
 - name: Get RHEL Deploy WebApp jobs
   ansible.builtin.uri:
@@ -39,7 +42,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_rdwa_jobs
-  when: r_rdwa.json.count > 0
+  failed_when: false
+  when: r_rdwa.json is defined and r_rdwa.json.count | default(0) > 0
 
 # Check Configure Loadbalancer ran at least twice
 - name: Get Configure Loadbalancer template
@@ -50,6 +54,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_clb
+  failed_when: false
 
 - name: Get Configure Loadbalancer jobs
   ansible.builtin.uri:
@@ -59,14 +64,24 @@
     force_basic_auth: true
     validate_certs: false
   register: r_clb_jobs
-  when: r_clb.json.count > 0
+  failed_when: false
+  when: r_clb.json is defined and r_clb.json.count | default(0) > 0
 
 # Evaluate results
 - name: Set validation results
   ansible.builtin.set_fact:
-    wdwa_ok: "{{ r_wdwa.json.count > 0 and (r_wdwa_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
-    rdwa_ok: "{{ r_rdwa.json.count > 0 and (r_rdwa_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
-    clb_ok: "{{ r_clb.json.count > 0 and (r_clb_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length >= 2) }}"
+    wdwa_ok: >-
+      {{ r_wdwa.json is defined and r_wdwa.json.count | default(0) > 0
+         and r_wdwa_jobs is defined and r_wdwa_jobs is not skipped
+         and (r_wdwa_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}
+    rdwa_ok: >-
+      {{ r_rdwa.json is defined and r_rdwa.json.count | default(0) > 0
+         and r_rdwa_jobs is defined and r_rdwa_jobs is not skipped
+         and (r_rdwa_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}
+    clb_ok: >-
+      {{ r_clb.json is defined and r_clb.json.count | default(0) > 0
+         and r_clb_jobs is defined and r_clb_jobs is not skipped
+         and (r_clb_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length >= 2) }}
 
 - name: Set validation output
   ansible.builtin.set_fact:
@@ -79,6 +94,10 @@
     validation_passed: >-
       {{ wdwa_ok | bool and rdwa_ok | bool and clb_ok | bool }}
 
+- name: Show validation results
+  ansible.builtin.debug:
+    msg: "{{ validation_output }}"
+
 - name: Write failure details
   ansible.builtin.copy:
     content: "{{ validation_output }}"
@@ -90,5 +109,5 @@
 
 - name: Fail if not passed
   ansible.builtin.fail:
-    msg: "Complete the missing tasks and try again."
+    msg: "{{ validation_output }}"
   when: not validation_passed | bool

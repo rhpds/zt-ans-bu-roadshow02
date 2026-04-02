@@ -10,6 +10,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wf
+  failed_when: false
 
 # Check workflow launched successfully
 - name: Get workflow jobs
@@ -20,7 +21,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wf_jobs
-  when: r_wf.json.count > 0
+  failed_when: false
+  when: r_wf.json is defined and r_wf.json.count | default(0) > 0
 
 # Check Windows Domain Controller template has vault credential
 - name: Get Windows Domain Controller template
@@ -31,6 +33,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wdc
+  failed_when: false
 
 - name: Get WDC template details
   ansible.builtin.uri:
@@ -40,7 +43,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wdc_detail
-  when: r_wdc.json.count > 0
+  failed_when: false
+  when: r_wdc.json is defined and r_wdc.json.count | default(0) > 0
 
 # Check WDC job ran successfully
 - name: Get WDC jobs
@@ -51,7 +55,8 @@
     force_basic_auth: true
     validate_certs: false
   register: r_wdc_jobs
-  when: r_wdc.json.count > 0
+  failed_when: false
+  when: r_wdc.json is defined and r_wdc.json.count | default(0) > 0
 
 # Check Deploy Node ran successfully
 - name: Get Deploy Node template
@@ -62,6 +67,7 @@
     force_basic_auth: true
     validate_certs: false
   register: r_dn
+  failed_when: false
 
 - name: Get Deploy Node jobs
   ansible.builtin.uri:
@@ -71,16 +77,30 @@
     force_basic_auth: true
     validate_certs: false
   register: r_dn_jobs
-  when: r_dn.json.count > 0
+  failed_when: false
+  when: r_dn.json is defined and r_dn.json.count | default(0) > 0
 
 # Evaluate results
 - name: Set validation results
   ansible.builtin.set_fact:
-    wf_exists_ok: "{{ r_wf.json.count > 0 }}"
-    wf_launched_ok: "{{ r_wf.json.count > 0 and (r_wf_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
-    vault_ok: "{{ r_wdc.json.count > 0 and (r_wdc_detail.json.summary_fields.credentials | default([]) | selectattr('name', 'search', '(?i)vault') | list | length > 0) }}"
-    wdc_ok: "{{ r_wdc.json.count > 0 and (r_wdc_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
-    dn_ok: "{{ r_dn.json.count > 0 and (r_dn_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}"
+    wf_exists_ok: >-
+      {{ r_wf.json is defined and r_wf.json.count | default(0) > 0 }}
+    wf_launched_ok: >-
+      {{ r_wf.json is defined and r_wf.json.count | default(0) > 0
+         and r_wf_jobs is defined and r_wf_jobs is not skipped
+         and (r_wf_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}
+    vault_ok: >-
+      {{ r_wdc.json is defined and r_wdc.json.count | default(0) > 0
+         and r_wdc_detail is defined and r_wdc_detail is not skipped
+         and (r_wdc_detail.json.summary_fields.credentials | default([]) | selectattr('name', 'search', '(?i)vault') | list | length > 0) }}
+    wdc_ok: >-
+      {{ r_wdc.json is defined and r_wdc.json.count | default(0) > 0
+         and r_wdc_jobs is defined and r_wdc_jobs is not skipped
+         and (r_wdc_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}
+    dn_ok: >-
+      {{ r_dn.json is defined and r_dn.json.count | default(0) > 0
+         and r_dn_jobs is defined and r_dn_jobs is not skipped
+         and (r_dn_jobs.json.results | default([]) | selectattr('status', 'equalto', 'successful') | list | length > 0) }}
 
 - name: Set validation output
   ansible.builtin.set_fact:
@@ -95,6 +115,10 @@
     validation_passed: >-
       {{ wf_exists_ok | bool and wf_launched_ok | bool and vault_ok | bool and wdc_ok | bool and dn_ok | bool }}
 
+- name: Show validation results
+  ansible.builtin.debug:
+    msg: "{{ validation_output }}"
+
 - name: Write failure details
   ansible.builtin.copy:
     content: "{{ validation_output }}"
@@ -106,5 +130,5 @@
 
 - name: Fail if not passed
   ansible.builtin.fail:
-    msg: "Complete the missing tasks and try again."
+    msg: "{{ validation_output }}"
   when: not validation_passed | bool
