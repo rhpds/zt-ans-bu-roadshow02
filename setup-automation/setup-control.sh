@@ -363,6 +363,7 @@ tee /tmp/setup.yml << EOF
       organization: "Default"
       scm_type: git
       scm_url: http://gitea:3000/student/aap25-roadshow-content.git       ##ttps://github.com/nmartins0611/aap25-roadshow-content.git
+      scm_branch: "aap-2.6"
       state: present
       controller_host: "https://localhost"
       controller_username: admin
