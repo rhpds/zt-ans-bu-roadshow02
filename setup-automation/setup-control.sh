@@ -363,6 +363,7 @@ tee /tmp/setup.yml << EOF
       organization: "Default"
       scm_type: git
       scm_url: http://gitea:3000/student/aap25-roadshow-content.git       ##ttps://github.com/nmartins0611/aap25-roadshow-content.git
+      scm_branch: "aap-2.6"
       state: present
       controller_host: "https://localhost"
       controller_username: admin
@@ -704,3 +705,6 @@ EOF
 export ANSIBLE_LOCALHOST_WARNING=False
 export ANSIBLE_INVENTORY_UNPARSED_WARNING=False
 ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml
+
+# Fix AAP 2.6 EE networking: remove slirp4netns override so podman uses pasta (default)
+sed -i 's/"--network", "slirp4netns:enable_ipv6=true", //' /home/rhel/aap/controller/etc/settings.py
