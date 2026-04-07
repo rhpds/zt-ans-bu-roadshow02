@@ -710,5 +710,9 @@ until curl -sk https://localhost/api/controller/v2/ping/ > /dev/null 2>&1; do sl
 
 # Fix AAP 2.6 EE networking: remove slirp4netns override so podman uses pasta (default)
 sed -i 's/"--network", "slirp4netns:enable_ipv6=true", //' /home/rhel/aap/controller/etc/settings.py
+su - rhel -c 'podman stop automation-controller-web automation-controller-task receptor && podman start automation-controller-web automation-controller-task receptor'
+
+# Wait for controller to be ready after restart
+until curl -sk https://localhost/api/controller/v2/ping/ > /dev/null 2>&1; do sleep 5; done
 
 ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml
