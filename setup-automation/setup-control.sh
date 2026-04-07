@@ -363,7 +363,6 @@ tee /tmp/setup.yml << EOF
       organization: "Default"
       scm_type: git
       scm_url: http://gitea:3000/student/aap25-roadshow-content.git       ##ttps://github.com/nmartins0611/aap25-roadshow-content.git
-      scm_branch: "aap-2.6"
       state: present
       controller_host: "https://localhost"
       controller_username: admin
@@ -705,8 +704,3 @@ EOF
 export ANSIBLE_LOCALHOST_WARNING=False
 export ANSIBLE_INVENTORY_UNPARSED_WARNING=False
 ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml
-
-# Fix AAP 2.6 EE networking: change slirp4netns to host so EEs can reach the controller API
-sed -i 's/slirp4netns:enable_ipv6=true/host/' /home/rhel/aap/controller/etc/settings.py
-su rhel -c 'podman stop automation-controller-web automation-controller-task receptor'
-su rhel -c 'podman start automation-controller-web automation-controller-task receptor'
