@@ -86,7 +86,7 @@ virtualmachines:
         - echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/50-cloud-init.conf
         - systemctl reload sshd
     services:
-      - name: control-https
+      - name: control
         ports:
           - port: 443
             protocol: TCP
@@ -99,7 +99,7 @@ virtualmachines:
     routes:
       - name: control-https
         host: control
-        service: control-https
+        service: control
         targetPort: 443
         tls: true
         tls_termination: reencrypt

@@ -6,7 +6,7 @@
 
   vars:
     _module_dir: "{{ module_dir | default(module_directory | default('')) }}"
-    aap_host: "https://control-https"
+    aap_host: "https://control"
     aap_username: "admin"
     aap_password: "ansible123!"
 
