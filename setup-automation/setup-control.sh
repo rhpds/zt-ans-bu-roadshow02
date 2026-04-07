@@ -704,10 +704,11 @@ EOF
 
 export ANSIBLE_LOCALHOST_WARNING=False
 export ANSIBLE_INVENTORY_UNPARSED_WARNING=False
-ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml
-PLAYBOOK_RC=$?
+
+# Wait for AAP controller to be ready
+until curl -sk https://localhost/api/controller/v2/ping/ > /dev/null 2>&1; do sleep 5; done
 
 # Fix AAP 2.6 EE networking: remove slirp4netns override so podman uses pasta (default)
 sed -i 's/"--network", "slirp4netns:enable_ipv6=true", //' /home/rhel/aap/controller/etc/settings.py
 
-exit $PLAYBOOK_RC
+ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml
