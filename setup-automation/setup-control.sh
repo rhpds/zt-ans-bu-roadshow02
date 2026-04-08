@@ -708,3 +708,10 @@ EOF
 export ANSIBLE_LOCALHOST_WARNING=False
 export ANSIBLE_INVENTORY_UNPARSED_WARNING=False
 ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml
+playbook_rc=$?
+
+# Restart task container so it picks up the updated settings.py (slirp4netns removal)
+# This ensures EE jobs use pasta networking instead of broken slirp4netns
+su - rhel -c 'podman stop automation-controller-task && podman start automation-controller-task'
+
+exit $playbook_rc
