@@ -1,4 +1,7 @@
 #!/bin/bash
+# Fix AAP 2.6 EE networking: remove slirp4netns override so podman uses pasta (default)
+sed -i 's/"--network", "slirp4netns:enable_ipv6=true", //' /home/rhel/aap/controller/etc/settings.py
+
 su rhel -c '[ -f /home/rhel/.ssh/id_rsa ] || ssh-keygen -f /home/rhel/.ssh/id_rsa -q -N ""'
 nmcli connection add type ethernet con-name enp2s0 ifname enp2s0 ipv4.addresses 192.168.1.10/24 ipv4.method manual connection.autoconnect yes
 nmcli connection up enp2s0
@@ -704,15 +707,4 @@ EOF
 
 export ANSIBLE_LOCALHOST_WARNING=False
 export ANSIBLE_INVENTORY_UNPARSED_WARNING=False
-
-# Wait for AAP controller to be ready
-until curl -sk https://localhost/api/controller/v2/ping/ > /dev/null 2>&1; do sleep 5; done
-
-# Fix AAP 2.6 EE networking: remove slirp4netns override so podman uses pasta (default)
-sed -i 's/"--network", "slirp4netns:enable_ipv6=true", //' /home/rhel/aap/controller/etc/settings.py
-su - rhel -c 'podman stop automation-controller-web automation-controller-task receptor && podman start automation-controller-web automation-controller-task receptor'
-
-# Wait for controller to be ready after restart
-until curl -sk https://localhost/api/controller/v2/ping/ > /dev/null 2>&1; do sleep 5; done
-
 ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml
