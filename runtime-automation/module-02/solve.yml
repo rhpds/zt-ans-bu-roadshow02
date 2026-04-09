@@ -4,7 +4,7 @@
 # Resolve DNS domain for RHEL Join AD
 - name: Get DNS domain
   ansible.builtin.set_fact:
-    dns_domain: "{{ lookup('pipe', 'grep ^search /etc/resolv.conf | awk \"{print $2}\"') | default('') }}"
+    dns_domain: "{{ 'lab.' + lookup('pipe', 'grep ^search /etc/resolv.conf').split()[1] }}"
 
 # Step 1: Launch "Windows Users and OU" with survey inputs
 - name: Get Windows Users and OU template
@@ -27,7 +27,7 @@
     body_format: json
     body:
       extra_vars:
-        ou_name: "Testing"
+        org_unit: "Testing"
         group_name: "TMM-Dev"
     status_code: [200, 201]
   register: r_launch_wuo

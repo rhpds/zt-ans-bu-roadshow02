@@ -189,8 +189,7 @@
     force_basic_auth: true
     validate_certs: false
     body_format: json
-    body:
-      id: "{{ r_vault_cred.json.results[0].id | int }}"
+    body: "{{ {'id': r_vault_cred.json.results[0].id | int} }}"
     status_code: [200, 201, 204]
   when: not vault_attached | bool
 
