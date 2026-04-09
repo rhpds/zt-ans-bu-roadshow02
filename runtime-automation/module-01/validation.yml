@@ -12,6 +12,18 @@
   register: r_wf
   failed_when: false
 
+# Check workflow nodes are chained (not parallel)
+- name: Get workflow nodes
+  ansible.builtin.uri:
+    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/{{ r_wf.json.results[0].id }}/workflow_nodes/"
+    user: "{{ aap_username }}"
+    password: "{{ aap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: r_wf_nodes
+  failed_when: false
+  when: r_wf.json is defined and r_wf.json.count | default(0) > 0
+
 # Check workflow launched successfully
 - name: Get workflow jobs
   ansible.builtin.uri:
@@ -85,6 +97,10 @@
   ansible.builtin.set_fact:
     wf_exists_ok: >-
       {{ r_wf.json is defined and r_wf.json.count | default(0) > 0 }}
+    wf_chained_ok: >-
+      {{ r_wf_nodes is defined and r_wf_nodes is not skipped
+         and (r_wf_nodes.json.results | default([]) | length == 2)
+         and (r_wf_nodes.json.results | default([]) | selectattr('always_nodes', 'defined') | selectattr('always_nodes', 'ne', []) | list | length > 0) }}
     wf_launched_ok: >-
       {{ r_wf.json is defined and r_wf.json.count | default(0) > 0
          and r_wf_jobs is defined and r_wf_jobs is not skipped
