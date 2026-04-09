@@ -97,23 +97,7 @@
   register: r_node1
   when: not wf_exists | bool
 
-- name: Add second workflow node (Server Applications)
-  ansible.builtin.uri:
-    url: "{{ aap_host }}/api/controller/v2/workflow_job_templates/{{ wf_id }}/workflow_nodes/"
-    method: POST
-    user: "{{ aap_username }}"
-    password: "{{ aap_password }}"
-    force_basic_auth: true
-    validate_certs: false
-    body_format: json
-    body:
-      unified_job_template: "{{ r_apps.json.results[0].id }}"
-      all_parents_must_converge: false
-    status_code: [200, 201]
-  register: r_node2
-  when: not wf_exists | bool
-
-- name: Link nodes (Registry -> Applications, always)
+- name: Add second workflow node as child of first (Registry -> Applications, always)
   ansible.builtin.uri:
     url: "{{ aap_host }}/api/controller/v2/workflow_job_template_nodes/{{ r_node1.json.id }}/always_nodes/"
     method: POST
@@ -123,8 +107,9 @@
     validate_certs: false
     body_format: json
     body:
-      id: "{{ r_node2.json.id }}"
-    status_code: [200, 201, 204]
+      unified_job_template: "{{ r_apps.json.results[0].id }}"
+    status_code: [200, 201]
+  register: r_node2
   when: not wf_exists | bool
 
 # Step 2: Launch the workflow
@@ -205,7 +190,7 @@
     validate_certs: false
     body_format: json
     body:
-      id: "{{ r_vault_cred.json.results[0].id }}"
+      id: "{{ r_vault_cred.json.results[0].id | int }}"
     status_code: [200, 201, 204]
   when: not vault_attached | bool
 
