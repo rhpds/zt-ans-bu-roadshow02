@@ -84,7 +84,7 @@ In the Output view, you can see the progress as each job template runs in sequen
 +
 image::workflow-action.png[Workflow running in the visualizer, opts="border"]
 +
-Once the workflow is complete (after 3-4 minutes), click on the **Windows Server Applications** node and review the job output. You can verify that packages like `procexp` and `windirstat` were installed.
+Once the workflow is complete (after 3-4 minutes), click on the **Windows Server Applications** node and review the job output. You can verify that packages like `windirstat` and `7zip` were installed.
 +
 image::apps.png[Job output showing installed applications, opts="border"]
 
@@ -172,7 +172,6 @@ tasks:
     name: '{{ item }}'
     state: present
   loop:
-    - procexp
     - windirstat
     - 7zip
     - git
