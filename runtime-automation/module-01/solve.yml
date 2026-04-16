@@ -135,7 +135,7 @@
     validate_certs: false
   register: r_job
   until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
-  retries: 60
+  retries: 80
   delay: 15
 
 - name: Warn if workflow failed
@@ -216,7 +216,7 @@
     validate_certs: false
   register: r_job
   until: r_job.json.status in ['successful', 'failed', 'error', 'canceled']
-  retries: 60
+  retries: 80
   delay: 15
 
 - name: Warn if Windows Domain Controller failed
