@@ -209,7 +209,7 @@ virtualmachines:
   - name: "windows"
     image: "base-windows-ad-2022"
     memory: "32G"
-    cores: 32
+    cores: 6
     image_size: "65Gi"
     tags:
       - key: "AnsibleGroup"
