@@ -131,7 +131,7 @@ tee /tmp/setup.yml << EOF
   - name: Add Network EE
     ansible.controller.execution_environment:
       name: "Edge_Network_ee"
-      image: quay.io/acme_corp/network-ee
+      image: quay.io/rhpds/summit-2026-acme-corp-network-ee:summit-2026
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
@@ -140,7 +140,7 @@ tee /tmp/setup.yml << EOF
   - name: Add Windows EE
     ansible.controller.execution_environment:
       name: "Windows_ee"
-      image: quay.io/nmartins/windows_ee_rs
+      image: quay.io/rhpds/summit-2026-nmartins-windows-ee-rs:summit-2026
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
@@ -149,7 +149,7 @@ tee /tmp/setup.yml << EOF
   - name: Add EE to the controller instance
     ansible.controller.execution_environment:
       name: "RHEL EE"
-      image: quay.io/acme_corp/rhel_90_ee_25:latest
+      image: quay.io/rhpds/summit-2026-acme-corp-rhel-90-ee-25:summit-2026
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
@@ -158,7 +158,7 @@ tee /tmp/setup.yml << EOF
   - name: Add EE to the controller instance
     ansible.controller.execution_environment:
       name: "Controller_ee"
-      image: quay.io/nmartins/cac-25_ee
+      image: quay.io/rhpds/summit-2026-nmartins-cac-25-ee:summit-2026
       controller_host: "https://localhost"
       controller_username: admin
       controller_password: ansible123!
