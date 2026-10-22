@@ -1,13 +1,14 @@
 ---
 site:
-  title: Ansible Automation Roadshow - Scenario 01
-  url: https://redhat-scholars.github.io/course-template
-  start_page: modules::index.adoc
+  title: Ansible Automation Roadshow - Scenario 02
+  url: https://rhpds.github.io/zt-ans-bu-roadshow02
+  start_page: modules::module-01.adoc
 
 content:
   sources:
     - url: .
       start_path: content
+      branches: [HEAD]
 
 ui:
   bundle:
