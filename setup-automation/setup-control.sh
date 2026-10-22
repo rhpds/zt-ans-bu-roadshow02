@@ -1,5 +1,8 @@
 #!/bin/bash
-su rhel -c 'ssh-keygen -f /home/rhel/.ssh/id_rsa -q -N ""'
+# Fix AAP 2.6 EE networking: remove slirp4netns override so podman uses pasta (default)
+sed -i 's/"--network", "slirp4netns:enable_ipv6=true", //' /home/rhel/aap/controller/etc/settings.py
+
+su rhel -c '[ -f /home/rhel/.ssh/id_rsa ] || ssh-keygen -f /home/rhel/.ssh/id_rsa -q -N ""'
 nmcli connection add type ethernet con-name enp2s0 ifname enp2s0 ipv4.addresses 192.168.1.10/24 ipv4.method manual connection.autoconnect yes
 nmcli connection up enp2s0
 echo "192.168.1.10 control.lab control" >> /etc/hosts
@@ -363,6 +366,7 @@ tee /tmp/setup.yml << EOF
       organization: "Default"
       scm_type: git
       scm_url: http://gitea:3000/student/aap25-roadshow-content.git       ##ttps://github.com/nmartins0611/aap25-roadshow-content.git
+      scm_branch: "aap-2.6"
       state: present
       controller_host: "https://localhost"
       controller_username: admin
@@ -701,4 +705,13 @@ tee /tmp/setup.yml << EOF
 EOF
 
 
-ANSIBLE_COLLECTIONS_PATH=/root/.ansible/collections/ansible_collections/ ansible-playbook -i /tmp/inventory /tmp/setup.yml
+export ANSIBLE_LOCALHOST_WARNING=False
+export ANSIBLE_INVENTORY_UNPARSED_WARNING=False
+ANSIBLE_COLLECTIONS_PATH=/root/ansible-automation-platform-containerized-setup/collections/ansible_collections ansible-playbook -i /tmp/inventory /tmp/setup.yml
+playbook_rc=$?
+
+# Restart task container so it picks up the updated settings.py (slirp4netns removal)
+# This ensures EE jobs use pasta networking instead of broken slirp4netns
+su - rhel -c 'podman stop automation-controller-task && podman start automation-controller-task'
+
+exit $playbook_rc
